@@ -2,10 +2,11 @@ import numpy as np
 from RBM import RBM
 import sys
 class Neuron(object):
-    def __init__(self, gen = 0):
+    def __init__(self, gen = 0, gt=0):
         self.rbm = RBM(784, 196)
         self.gen = gen
-        self.r_error = 0
+        self.r_error = gt/2
+        self.lasthit = 0
         self.hits = 0
     def train_single(self, x, eps):
         self.hits += 1
@@ -24,11 +25,13 @@ class GSOM(object):
         self.eps = 0.9
         self.dim = dims
         self.neurons = {}
+        self.hit_timer = 0
+
         self.range = 10
         self.fd = 0.45
         for i in range(2):
             for j in range(2):
-                self.neurons[str(i) + 'x' + str(j)] = Neuron(gen=0)
+                self.neurons[str(i) + 'x' + str(j)] = Neuron(gen=0, gt= self.GT)
 
     def find_bmu(self, x):
         e = float('Inf')
@@ -45,55 +48,59 @@ class GSOM(object):
         for i in range(1,iter+1):
             dead = 0
             cut = 0
-            if x.shape[0] > 100:
-                batches = x.shape[0] /100
+            if x.shape[0] > 10:
+                batches = x.shape[0] /10
                 for j in range(batches):
                     sys.stdout.flush()
 
-                    sys.stdout.write('epoch:'+str(i)+'/'+str(iter) + ' batch:' + str(j) + '/' +str(batches) +'\r')
-                    xk = x[j*100:j*100+100]
-                    self.gen = j
+                    sys.stdout.write("\r epoch:%i/%i batch:%i/%i n : %i "%(i, iter, j+1, batches, len(self.neurons)))
+                    xk = x[j*10:j*10+10]
+                    self.gen +=1
                     for xi in xk:
+                        self.hit_timer += 1
                         self.train(xi)
 
-                    cutoff_age =  np.log2(self.gen)#/(i*iter)
+                    cutoff_age =  self.gen/2#np.log2(self.gen)#/(i*iter)
 
                     for k in self.neurons.keys():
-                        if self.neurons[k].gen < cutoff_age:
+                        if self.neurons[k].lasthit < self.hit_timer*i/(iter*x.shape[0]):
                             del self.neurons[k]
-                            dead += 1
-                            continue
-                        if self.neurons[k].hits < np.log2(x.shape[0]*i/iter):
-                            cut += 1
-                            del self.neurons[k]
-            self.range *= 0.9
-            self.eps *= 0.9
-            print 'epoch :', i, ' nodes : ', len(self.neurons.keys()), 'dead: ', dead, 'cut :', cut
-        t = 0
-        #
-        # for k in self.neurons.keys():
-        #     if self.neurons[k].hits < x.shape[0] / np.log2(x.shape[0]):
-        #         del self.neurons[k]
-        #         t+=1
-        # for k in self.neurons.keys():
-        #     if self.neurons[k].r_error/iter > self.GT :
-        #         del self.neurons[k]
-        #         t += 1
-        print 'deleted nodes: ', t
+                            dead +=1
+                        # if self.neurons[k].gen < cutoff_age:
+                        #     del self.neurons[k]
+                        #     dead += 1
+                        #     continue
+                        # if self.neurons[k].hits < np.log2(x.shape[0]*i/iter):
+                        #     cut += 1
+                        #     del self.neurons[k]
+                        #     continue
+                        # if self.neurons[k].r_error < self.GT :
+                        #     del self.neurons[k]
+                        #     cut +=1
+                    self.range *= 0.9
+                    self.eps *= (0.9 * (1- 3.8 / len(self.neurons)))
+            print '\nepoch :', i, ' nodes : ', len(self.neurons.keys()), 'dead: ', dead, 'cut :', cut
+            t = 0
+
+            # for k in self.neurons.keys():
+            #     if self.neurons[k].r_error > self.GT * 0.9:
+            #         del self.neurons[k]
+            #         t+=1
+            # print 'deleted nodes: ', t
 
     def train(self, x):
         bmu, e = self.find_bmu(x)
-
+        r_error = self.neurons[bmu].r_error
+        self.neurons[bmu].lasthit = self.hit_timer
         for v in self.inrange(bmu):
             n_i = v[0]
             hn = float(v[1])
             eps = self.eps *hn
             error = self.neurons[n_i].train_single(np.array([x]), eps=eps)
-            r_error = self.neurons[n_i].r_error
             if n_i == bmu:
                 self.neurons[bmu].r_error += error
-            if r_error > self.GT:
-                self.grow(n_i)
+        if r_error > self.GT:
+            self.grow(bmu)
 
     def str_strip(self, string):
         return np.array([string.split('x')]).astype(int)
@@ -142,7 +149,7 @@ class GSOM(object):
                 else:
                     w = new_b
 
-                neu = Neuron(gen=self.gen)
+                neu = Neuron(gen=self.gen, gt = self.GT)
                 self.max_age = self.gen
                 neu.w = w
                 self.neurons[self.str_dress(nei)] = neu

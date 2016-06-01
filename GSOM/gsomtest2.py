@@ -34,9 +34,9 @@ train[train>0]=1
 t_x = train[:200]
 ### Bitmap  indexing for the number of legs
 
-gsom = GSOM(sp = 0.9)
+gsom = GSOM(sp = 8.0/(10**1))
 
-gsom.batch_train(t_x, iter=2)
+gsom.batch_train(t_x, iter=10)
 
 x = []
 y = []
@@ -56,8 +56,10 @@ x = []
 y = []
 labels = []
 
-for k in range(100):
-    bmu = gsom.str_strip(gsom.find_bmu(t_x[k])[0])[0]
+data = pd.read_csv('../mnist_test.csv', header=None).as_matrix()
+test_x = data[:, 1:]
+for k in range(150):
+    bmu = gsom.str_strip(gsom.find_bmu(test_x[k])[0])[0]
     x.append(bmu[0])
     y.append(bmu[1])
 
