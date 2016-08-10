@@ -10,25 +10,27 @@ class Neuron(object):
         self.hits = 0
     def train_single(self, x, eps):
         self.hits += 1
-        self.rbm.train(x, eps=eps, )
-        self.r_error += np.linalg.norm(self.rbm.reconstruct()[0] - x)
-        return self.r_error
+        self.rbm.train(x, eps=eps )
+        self.w = self.rbm.w
+        self.lasthit += 1
+        # self.r_error += np.linalg.norm(self.rbm.reconstruct()[0] - x)
+        return np.linalg.norm(self.rbm.reconstruct()[0] - x)#self.r_error
     def reconstruct(self, x):
         #self.rbm.positive(np.array([x]))  self.rbm.disc_error(x)
         return np.linalg.norm(self.rbm.reconstruct() - x)
 
 class GSOM(object):
-    def __init__(self, dims = 784, sp = 0.8):
+    def __init__(self, dims = 784, sp = 0.9):
         self.GT = -1 * dims * np.log(sp)
         self.max_age = 0
         self.gen = 0
-        self.eps = 0.9
+        self.eps = 0.01
         self.dim = dims
         self.neurons = {}
         self.hit_timer = 0
 
-        self.range = 10
-        self.fd = 0.45
+        self.range = 1.1
+        self.fd = 0.75
         for i in range(2):
             for j in range(2):
                 self.neurons[str(i) + 'x' + str(j)] = Neuron(gen=0, gt= self.GT)
@@ -37,7 +39,7 @@ class GSOM(object):
         e = float('Inf')
         cand = None
         for n_i in self.neurons.keys():
-            e_i = self.neurons[n_i].reconstruct(x)
+            e_i = self.neurons[n_i].reconstruct(np.array([x]))
             if e_i < e:
                 e = e_i
                 cand = n_i
@@ -48,9 +50,13 @@ class GSOM(object):
         for i in range(1,iter+1):
             dead = 0
             cut = 0
+            prune_coef = 0.9
             if x.shape[0] > 10:
                 batches = x.shape[0] /10
+                b = -1 * np.log(prune_coef) / (batches + 1)
+
                 for j in range(batches):
+                    # cut = 1+prune_coef - np.exp(-1 * b * j)
                     sys.stdout.flush()
 
                     sys.stdout.write("\r epoch:%i/%i batch:%i/%i n : %i "%(i, iter, j+1, batches, len(self.neurons)))
@@ -61,23 +67,26 @@ class GSOM(object):
                         self.train(xi)
 
                     cutoff_age =  self.gen/2#np.log2(self.gen)#/(i*iter)
+                    if len(self.neurons.keys()) > 70:
+                        for k in self.neurons.keys():
 
-                    for k in self.neurons.keys():
-                        if self.neurons[k].lasthit < self.hit_timer*i/(iter*x.shape[0]):
-                            del self.neurons[k]
-                            dead +=1
-                        # if self.neurons[k].gen < cutoff_age:
-                        #     del self.neurons[k]
-                        #     dead += 1
-                        #     continue
-                        # if self.neurons[k].hits < np.log2(x.shape[0]*i/iter):
-                        #     cut += 1
-                        #     del self.neurons[k]
-                        #     continue
-                        # if self.neurons[k].r_error < self.GT :
-                        #     del self.neurons[k]
-                        #     cut +=1
+                            if self.neurons[k].lasthit < self.hit_timer*0.7:
+                                del self.neurons[k]
+                                dead +=1
+                                continue
+                            if self.neurons[k].gen < cutoff_age:
+                                del self.neurons[k]
+                                dead += 1
+                                continue
+                            if self.neurons[k].hits < 0.02 *(j/100+1) * np.log2(x.shape[0]*i/iter):
+                                cut += 1
+                                del self.neurons[k]
+                                continue
+                            # if self.neurons[k].r_error < self.GT :
+                            #     del self.neurons[k]
+                            #     cut +=1
                     self.range *= 0.9
+
                     self.eps *= (0.9 * (1- 3.8 / len(self.neurons)))
             print '\nepoch :', i, ' nodes : ', len(self.neurons.keys()), 'dead: ', dead, 'cut :', cut
             t = 0
@@ -99,7 +108,7 @@ class GSOM(object):
             error = self.neurons[n_i].train_single(np.array([x]), eps=eps)
             if n_i == bmu:
                 self.neurons[bmu].r_error += error
-        if r_error > self.GT:
+        if r_error > self.GT and len(self.neurons) < 150:
             self.grow(bmu)
 
     def str_strip(self, string):

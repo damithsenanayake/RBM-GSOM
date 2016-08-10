@@ -29,7 +29,7 @@ train = data[:, 1:]/255
 train[np.where(train>0)]=1
 #works well for binary images, but features don't get properly extraced for non binary images.
 ones = train[np.where(np.where(data[:,0] == 5)[0]<100000)[0]]
-rbm = RBM(784, 100)
+rbm = RBM(784, 196)
 m = 0.5
 for i in range(10):
     if i > 5:
@@ -40,12 +40,12 @@ for i in range(10):
 
 w = rbm.w#.flatten()
 
-visualizeW1(w.T, 28, 10)
+visualizeW1(w.T, 28, 14)
 #
 # plt.imshow(np.reshape(ones[20], (-1,28)))
 # plt.show()
 #
-rbm.train(ones[:10], momentum= m, w_cost=0.0001)
+rbm.train(ones[:10], momentum= m, w_cost=0.003, beta=0)
 plt.imshow(np.reshape(ones[7], (-1,28)))
 plt.show()
 plt.imshow(np.reshape(rbm.negdata[7],(-1, 28)))

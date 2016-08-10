@@ -46,7 +46,7 @@ class RBM(object):
         return  dist.jaccard(hstates, act_hstates)
         # return np.linalg.norm((hstates - act_hstates))
 
-    def train(self, x, w_cost=0.0001, momentum=0.5 , beta = 0.01, eps =0.1):#0.008):
+    def train(self, x, w_cost=0.0001, momentum=0.5 , beta = 0.01, eps =0.0):#0.008):
 
         self.positive(x)
         self.reconstruct()

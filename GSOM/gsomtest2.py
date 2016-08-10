@@ -3,20 +3,19 @@ from GSOM import GSOM
 import matplotlib.pyplot as plt
 import pandas as pd
 
-def visualizeW1(opt_W1, vis_patch_side, hid_patch_side, title):
 
+def visualizeW1(opt_W1, vis_patch_side, hid_patch_side, title):
     """ Add the weights as a matrix of images """
     plt.title(title)
-    figure, axes = plt.subplots(nrows = hid_patch_side,
-                                              ncols = hid_patch_side )
+    figure, axes = plt.subplots(nrows=hid_patch_side,
+                                ncols=hid_patch_side)
     index = 0
 
     for axis in axes.flat:
-
         """ Add row of weights as an image to the plot """
 
         image = axis.imshow(opt_W1[index, :].reshape(vis_patch_side, vis_patch_side),
-                            cmap = plt.cm.gray, interpolation = 'nearest')
+                            cmap=plt.cm.gray, interpolation='nearest')
         axis.set_frame_on(False)
         axis.set_axis_off()
         index += 1
@@ -25,18 +24,18 @@ def visualizeW1(opt_W1, vis_patch_side, hid_patch_side, title):
 
     plt.show()
 
-data = pd.read_csv('../mnist_train.csv', header=None).as_matrix()
 
+data = pd.read_csv('../mnist_train.csv', header=None).as_matrix()
 
 train = data[:, 1:]
 
-train[train>0]=1
-t_x = train[:200]
+train[train > 0] = 1
+t_x = train[:10000]
 ### Bitmap  indexing for the number of legs
 
-gsom = GSOM(sp = 8.0/(10**1))
+gsom = GSOM(sp=0.999999)
 
-gsom.batch_train(t_x, iter=10)
+gsom.batch_train(t_x, iter=1)
 
 x = []
 y = []
@@ -63,9 +62,7 @@ for k in range(150):
     x.append(bmu[0])
     y.append(bmu[1])
 
-    labels.append(data[k][0])#data[k][-1])
-
-
+    labels.append(data[k][0])  # data[k][-1])
 
 # for i in range(1000):
 #     v = train[i]
@@ -98,4 +95,3 @@ for label, x_, y_ in zip(labels, x, y):
                  bbox=dict(boxstyle='round,pad=0.5', fc='yellow', alpha=0.3),
                  arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=0'))
 plt.show()
-
