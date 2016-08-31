@@ -5,6 +5,9 @@ from sklearn.neighbors import NearestNeighbors
 from sklearn.preprocessing import scale
 import sys
 
+def sig(x):
+    return 1/(1+np.exp(-x))
+
 class GSOM(object):
 
     def __init__(self, dims, sf, fd, max_nodes, min_nodes, radius = 5):
@@ -14,16 +17,18 @@ class GSOM(object):
         self.errors = {}
         self.hits = {}
         self.gen = {}
+        self.biases = {}
         for i in range(2):
             for j in range(2):
-                self.neurons[str([i, j])] = np.random.random(dims)
+                self.neurons[str([i, j])] = 0.1*np.random.randn(dims)#2*np.random.random(dims)-1
                 self.grid[str([i, j])] = [i, j]
                 self.errors[str([i, j])] = 0
                 self.gen[str([i, j])] = 0
                 self.hits[str([i, j])] = 0
+                self.biases[str([i, j])] = 0.0
 
         self.sf = sf
-        self.GT = -dims * np.log(sf)#/255.0
+        self.GT = -np.log(sf)#dims * /255.0
         self.fd = fd
         self. max_nodes = max_nodes
         self.min_nodes = min_nodes
@@ -72,6 +77,7 @@ class GSOM(object):
                 del self.neurons[k]
                 del self.grid[k]
                 del self.hits[k]
+                del self.biases[k]
 
     def train_batch(self, X, iterations, lr, prune = True):
         self.lr = lr
@@ -93,12 +99,13 @@ class GSOM(object):
             self.range = self.radius * np.exp(- i / iterations)
         if prune:
             for k in self.neurons.keys():
-                if len(self.neurons) > self.min_nodes and ( self.hits[k] < X.shape[0]/10.0 or self.gen[k] < self.current_gen * 0.75 ) :
+                if len(self.neurons) > self.min_nodes and ( self.hits[k] < X.shape[0]/10.0 or self.gen[k] < self.current_gen * 0.75 )  :
                     del self.gen[k]
                     del self.errors[k]
                     del self.neurons[k]
                     del self.grid[k]
                     del self.hits[k]
+                    del self.biases[k]
 
     def prune_unused(self):
         for k in self.neurons.keys():
@@ -114,18 +121,21 @@ class GSOM(object):
 
 
     def train_single(self, x):
-        bmu, err = self.find_bmu(x)
+        bmu, acts = self.find_bmu(x)
         neighbors , dists = self.get_neighbourhood(bmu)
         hs = np.exp(-(dists / 2*self.range))
         hs = scale(hs, with_mean=False)
         hs /= hs.max()
-        hs.fill(1)
+        deltas = (1-acts)**2 * acts
         weights = np.array(self.neurons.values())[neighbors]
+        biases = np.array(self.biases.values())[neighbors]
+        weights += weights*np.array([deltas[neighbors]]).T*np.array([hs]).T*self.lr
+        biases += deltas[neighbors]*hs*self.lr
 
-        weights += np.array([hs]).T * (x - weights) * self.lr
 
-        for neighbor, w in zip(np.array(self.neurons.keys())[neighbors], weights):
+        for neighbor, w, b in zip(np.array(self.neurons.keys())[neighbors], weights, biases):
             self.neurons[neighbor] = w #* self.lr * (x - self.neurons[neighbor])
+            self.biases[neighbor] = b
             # self.neurons[neighbor] +=  self.lr* (x - self.neurons[neighbor]) #* self.lr * (x - self.neurons[neighbor])
             # try:
             #     if self.errors[neighbor] > self.GT and self.max_nodes > len(self.neurons):
@@ -133,11 +143,11 @@ class GSOM(object):
             # except:
             #     continue
         try:
-            self.errors[bmu] += err
+            self.errors[bmu] += (1- acts.max())
         except KeyError:
-            self.errors[bmu] = err
+            self.errors[bmu] = (1-acts.max())
         if self.errors[bmu] > self.Herr:
-                self.Herr += err
+                self.Herr += (1-acts.max())
 
         for k in np.array(self.neurons.keys())[neighbors]:
             if self.errors[k] > self.GT and self.max_nodes > len(self.neurons):
@@ -160,18 +170,24 @@ class GSOM(object):
 
 
     def find_bmu(self, x):
-        nodes = np.asarray(self.neurons.values())
-        deltas = nodes - x
-        dist_sqr = np.sum(deltas**2, axis =1 )
-        mink = np.argmin(dist_sqr)
+
+        activations = sig(np.asarray(self.neurons.values()).dot(x) + np.asarray(self.biases.values()))
+
+        mink = np.argmax(activations)
+
+
+        # nodes = np.asarray(self.neurons.values())
+        # deltas = nodes - x
+        # dist_sqr = np.sum(deltas**2, axis =1 )
+        # mink = np.argmin(dist_sqr)
         # mink = pairwise_distances_argmin(nodes, np.array([x]))
-        try:
-            dist =minkowski(self.neurons.values()[mink], x, p = 2)
-        except ValueError:
-            print 'nan'
+        # try:
+        #     dist =minkowski(self.neurons.values()[mink], x, p = 2)
+        # except ValueError:
+        #     print 'nan'
 
         self.hits[self.neurons.keys()[mink]] += 1
-        return self.neurons.keys()[mink], dist  #dist_sqr[mink]
+        return self.neurons.keys()[mink], activations #dist_sqr[mink]
 
     def get_neighbourhood(self, node):
         p_dist_matrix = pairwise_distances(np.array(self.grid.values()))
@@ -198,18 +214,24 @@ class GSOM(object):
 
                 if new_b.any():
                     w = new_b
+                    b = self.type_b_b(nei, direction)
                 else:
                     new_a = self.type_a(nei, direction)
 
                     if new_a.any():
                         w = new_a
+                        b = self.type_a_b(nei, direction)
                     else:
                         new_c = self.type_c(nei, direction)
                         if new_c.any():
                                 w = new_c
+                                b = self.type_c_b(nei, direction)
                         else:
                             w = np.random.random(self.dims)
                             w.fill(np.array(self.neurons.values()).min() + 0.5 * (np.array(self.neurons.values()).max() - np.array(self.neurons.values()).min()))
+                            b = 0.5
+
+
                 #     if new_a.any():
                 #         if new_c.any():
                 #             # w.fill(0.5)
@@ -221,6 +243,7 @@ class GSOM(object):
                 #     w = new_b
 
                 self.neurons[str(list(nei))] = w
+                self.biases[str(list(nei))] = b
                 self.grid[str(list(nei))] = list(nei)
                 self.errors[str(list(nei))] = self.GT/2
                 self.gen[str(list(nei))] = self.current_gen
@@ -277,3 +300,52 @@ class GSOM(object):
         except KeyError:
             return np.array([0])
 
+
+    def type_b_b(self, nei, direction):
+        try:
+            if direction == 0 or direction == 2:
+                return (self.biases[str(list(nei + np.array([0, -1])))] + self.biases[
+                    str(list((nei + np.array([0, 1]))))]) * 0.5
+            return (self.biases[str(list(nei + np.array([-1, 0])))] + self.biases[
+                str(list(nei + np.array([1, 0])))]) * 0.5
+        except KeyError:
+            return None
+
+
+    def type_a_b(self, nei, direction):
+        try:
+            anc = {0: np.array([0, 1]),
+                   1: np.array([1, 0]),
+                   2: np.array([0, -1]),
+                   3: np.array([-1, 0])}
+            w1 = self.biases[str(list((nei - anc[(direction)])))]
+            w2 = self.biases[str(list(nei - 2 * anc[(direction)]))]
+            return 2 * w1 - w2
+        except KeyError:
+            return None
+
+
+    def type_c_b(self, nei, direction):
+        try:
+            anc = {0: np.array([0, 1]),
+                   1: np.array([1, 0]),
+                   2: np.array([0, -1]),
+                   3: np.array([-1, 0])}
+
+            if direction == 0 or direction == 2:
+                try:
+                    return 2 * self.biases[str(list(nei - anc[direction]))] - self.biases[
+                        str(list(nei - anc[direction] + np.array([1, 0])))]
+                except KeyError:
+                    return 2 * self.biases[str(list(nei - anc[direction]))] - self.biases[
+                        str(list(nei - anc[direction] + np.array([-1, 0])))]
+
+            else:
+                try:
+                    return 2 * self.biases[str(list(nei - anc[direction]))] - self.biases[
+                        str(list(nei - anc[direction] + np.array([0, 1])))]
+                except KeyError:
+                    return 2 * self.biases[str(list(nei - anc[direction]))] - self.biases[
+                        str(list(nei - anc[direction] + np.array([0, -1])))]
+        except KeyError:
+            return None
