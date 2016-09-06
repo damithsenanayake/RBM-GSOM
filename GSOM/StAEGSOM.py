@@ -10,9 +10,7 @@ def sig(x):
 
 class GSOM(object):
 
-    def __init__(self, dims, hid,  sf, fd, max_nodes, min_nodes, radius = 5, scale=1,X=None, nei=True):
-
-        self.nei = nei
+    def __init__(self, dims, hid,  sf, fd, max_nodes, min_nodes, radius = 5, scale=1,X=None):
 
         self.s1 = None,
         self.m1 = None
@@ -105,19 +103,15 @@ class GSOM(object):
                 mean = hits.mean()
                 std = hits.std()
                 upper = mean + 3 * std
-                lower = mean - 3 * std
+                lower = mean - 3 *std
 
                 for k in self.grid.keys():
-                    if len(self.hits.values()) > self.min_nodes and (
-                                self.hits[k] < max(lower, 1) or self.hits[k] > upper or self.gen[
-                        k] < self.current_gen * 0.5 * np.exp(
-                                -i / iterations)):  # and len(self.grid) > or self.gen[k] < self.current_gen * 0.75 self.min_nodes   :
+                    if  len(self.hits.values()) > self.min_nodes and ( self.hits[k] < max(lower, 1) or self.hits[k] > upper or self.gen[k] < self.current_gen * 0.5  * np.exp(-i / iterations)) :#and len(self.grid) > or self.gen[k] < self.current_gen * 0.75 self.min_nodes   :
                         del self.gen[k]
                         del self.errors[k]
                         del self.learners[k]
                         del self.grid[k]
                         del self.hits[k]
-
 
     def prune_unused(self):
         for k in self.neurons.keys():
@@ -136,15 +130,13 @@ class GSOM(object):
         bmu, err = self.find_bmu(x)
 
         neighbors , dists = self.get_neighbourhood(bmu)
-        hs = np.exp(-(dists**2 / (2*self.range**2)))/np.sum(np.exp(-(dists**2 / (2*self.range**2))))
+        hs = np.exp(-(dists / (2*self.range)))/np.sum(np.exp(-(dists / (2*self.range))))
+        ts = np.random.binomial(1, np.exp(-(dists**2 / (2*self.range**2))), size=hs.shape)
 
-
-        for neighbor, h in zip(neighbors, hs):
-            #if self.hits.values()[neighbor] < 50: #### This gave good results. See if this had any effects!
-            if not self.nei:
-                h = 1
-
-            self.param_learn(x, neighbor, h, self.lr)
+        for neighbor, t, h in zip(neighbors, ts, hs):
+            if t:
+                if self.hits.values()[neighbor] < 50:
+                    self.param_learn(x, neighbor, h, self.lr)
 
         try:
             self.errors[bmu] += err
