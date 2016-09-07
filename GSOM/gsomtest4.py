@@ -12,11 +12,11 @@ noise = np.random.randn(300, 10)
 # X = np.append(X,noise, axis = 1)
 
 indices = np.random.permutation(X.shape[0])
-gsom = GSOM(dims=10, hid = 10, sf = 0.1, fd = 0.01, max_nodes = 1000, min_nodes = 0, radius=1.420, X = X)
+gsom = GSOM(dims=10, hid = 5, sf = 0.00001, fd = 0.00001, max_nodes = 1000, min_nodes = 0, radius=10, X = X, gaussian=False)
 
-for i in range(100):
+for i in range(50):
     print "\nbatch ", (i+1)
-    gsom.train_batch(X[indices], iterations=2, lr =0.1* np.exp(-i/10), prune=True)
+    gsom.train_batch(X[indices], iterations=2, lr = 1*np.exp(-i/50), prune=True)
 
 # gsom.prune()
 

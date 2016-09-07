@@ -1,4 +1,4 @@
-from StAEGSOM import GSOM
+from AEGSOM import GSOM
 from sklearn.manifold import TSNE, Isomap, MDS
 from sklearn.decomposition import KernelPCA,FactorAnalysis
 import numpy as np
@@ -12,7 +12,7 @@ from AutoEncoder import AutoEncoder
 
 fi = pd.read_csv('../mnist_train.csv', header=None)
 test = pd.read_csv('../mnist_test.csv', header=None)
-dat =np.array(fi)[:10000, 1:]/255.0
+dat =np.array(fi)[:, 1:]/255.0
 labels = np.array(fi)[:, 0]
 # reductor = AutoEncoder(hid_size=100)
 # X = reductor.reduce(dat)
@@ -20,16 +20,16 @@ labels = np.array(fi)[:, 0]
 gsom = GSOM(dims=784, hid = 192, sf = 0.7, fd = 0.3, max_nodes = 1200, min_nodes = 10, radius=5, scale = 1, X=dat)
 
 
-for i in range(10):
+for i in range(100):
     print '\nbatch '+ str(i+1)
     prune = False
     if i %4 ==1:
         prune = True
-    gsom.train_batch(dat[i*500:(i+1)*500], lr = 0.1*np.exp(-i/ 10),  iterations=5, prune=(i!=199))#lr=0.01*np.exp(-i/200), iterations=100)
+    gsom.train_batch(dat[i*500:(i+1)*500], lr = 0.01*np.exp(-i/ 10),  iterations=1, prune=(i!=199))#lr=0.01*np.exp(-i/200), iterations=100)
     # if len(gsom.neurons) > gsom.max_nodes:
     #     gsom.cull_old()
 # gsom.prune()
-grid, hits = gsom.predict((dat[:250]))
+grid, hits = gsom.predict((dat[:1000]))
 x, y = grid.T
 colors = dat
 nodes = np.unique(np.array(hits))

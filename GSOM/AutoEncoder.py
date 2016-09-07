@@ -4,8 +4,10 @@ import sys
 
 class AutoEncoder(object):
 
-    def __init__(self, vis, hid, s = None, m= None):
-        self.w1 = (np.random.random((vis, hid)) - 0.5) * 0.00001 #* 0.001
+    def __init__(self, vis, hid, s = None, m= None, gaussian = False):
+        self.w1 =2* (np.random.random((vis, hid)) - 0.5) * 0.00001 #* 0.001
+        if gaussian:
+            self.w1 = np.random.randn(vis, hid)
         # if s != None:
         #     self.w1 *= s
         # if m != None:
@@ -13,7 +15,7 @@ class AutoEncoder(object):
         #(np.random.random((784,100)) * 2-1)*0.1
         self.w2 = self.w1.T
         self.b1 = np.random.randn(hid) #* 0.001
-        self.b2 = np.zeros(vis) #* 0.001
+        self.b2 = np.random.randn(vis) #* 0.001
         self.st = time.time()
         self.mw1 = np.zeros(self.w1.shape)
         self.mw2 = np.zeros(self.w2.shape)

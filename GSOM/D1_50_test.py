@@ -10,7 +10,7 @@ print X.shape
 Y = np.array(data)[:, -1]
 
 
-gsom = GSOM(dims=50,  hid=50, fd=0.1, sf=0.1, radius=2,max_nodes=2005, min_nodes=0)
+gsom = GSOM(dims=50,  hid=2, fd=0.1, sf=0.1, radius=15,max_nodes=2005, min_nodes=0)
 
 for i in range(100):
     print "\n iteration ", (i+1)

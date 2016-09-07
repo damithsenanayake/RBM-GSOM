@@ -10,7 +10,7 @@ class SOM(object):
         # self.grid = np.array(grid).astype(float)
         self.errors = np.zeros(grid_side*grid_side)
         self.GT = - dims * np.log(0.001)
-        self.gamma = 4
+        self.gamma = 2
         self.grid = np.random.random((grid_side * grid_side, 2))
 
 
@@ -41,7 +41,7 @@ class SOM(object):
         return np.array(out)
 
     def train(self, X):
-        rad = 0.4
+        rad = 1
 
         for b in range(0,100):
             for x in X:
@@ -49,7 +49,7 @@ class SOM(object):
                 sys.stdout.flush()
                 bmu, error = self.find_bmu(x)
                 neighbors, dists = self.get_neighborhood(bmu, rad)
-                if dists.shape[0] == 0:
+                if dists.shape[0] == 1:
                     return
                 m = max(dists)
                 h = np.exp(-dists ** 2 / m ** 2)
@@ -60,23 +60,24 @@ class SOM(object):
                 m = max(dists)
                 h = np.exp(-dists ** 2 / m ** 2)
 
-                self.grid[neighbors] += 0.13*(self.grid[bmu] - self.grid[neighbors])*np.array([h]).T/h.sum()
+                self.grid[neighbors] += 0.01*(self.grid[bmu] - self.grid[neighbors])*np.array([h]).T/h.sum()
 
                 if self.errors[bmu] > self.GT:
-                    for i in range(int(neighbors.shape[0] - self.gamma)):
-                        new_node = rad * np.random.randn(1, 2) + self.grid[bmu]
-                        new_weight = np.mean(self.neurons[self.get_neighborhood(bmu,rad)[0]], axis = 0)
-                        self.neurons = np.append(self.neurons, np.array([new_weight]), axis = 0)
-                        self.grid = np.append(self.grid, new_node, axis=0)
-                        self.errors = np.append(self.errors, 0)
+                    if self.neurons.shape[0]< 750:
+                        for i in range(int(neighbors.shape[0] - self.gamma)):
+                            new_node = rad * (2*np.random.random(2)-1) + self.grid[bmu]
+                            new_weight = np.mean(self.neurons[self.get_neighborhood(bmu,rad)[0]], axis = 0)
+                            self.neurons = np.append(self.neurons, np.array([new_weight]), axis = 0)
+                            self.grid = np.append(self.grid, np.array([new_node]), axis=0)
+                            self.errors = np.append(self.errors, 0)
 
                     neighbors, dists = self.get_neighborhood(bmu, rad)
                     m = max(dists)
                     h = np.exp(-dists ** 2 / m ** 2)
                     self.errors[neighbors] += self.errors[bmu] * 0.001 * h / h.sum()
 
-            rad *= 0.99
-            self.gamma -=1
+            rad *= 0.9
+            # self.gamma -=1
 
 
 

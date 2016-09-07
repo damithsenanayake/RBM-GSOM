@@ -14,6 +14,7 @@ class GSOM(object):
         self.errors = {}
         self.hits = {}
         self.gen = {}
+        self.means={}
         for i in range(2):
             for j in range(2):
                 self.neurons[str([i, j])] = np.random.random(dims)
@@ -21,6 +22,7 @@ class GSOM(object):
                 self.errors[str([i, j])] = 0
                 self.gen[str([i, j])] = 0
                 self.hits[str([i, j])] = 0
+                self.means[str([i, j])] = 0
 
         self.sf = sf
         self.GT = -dims * np.log(sf)#/255.0
@@ -195,21 +197,21 @@ class GSOM(object):
                 self.errors[str(list(nei))] += self.errors[bmu] * self.fd
             except KeyError:
                 new_b = self.type_b(nei, direction)
-
-                if new_b.any():
-                    w = new_b
-                else:
-                    new_a = self.type_a(nei, direction)
-
-                    if new_a.any():
-                        w = new_a
-                    else:
-                        new_c = self.type_c(nei, direction)
-                        if new_c.any():
-                                w = new_c
-                        else:
-                            w = np.random.random(self.dims)
-                            w.fill(np.array(self.neurons.values()).min() + 0.5 * (np.array(self.neurons.values()).max() - np.array(self.neurons.values()).min()))
+                w = self.get_new_weight(bmu, nei)
+                # if new_b.any():
+                #     w = new_b
+                # else:
+                #     new_a = self.type_a(nei, direction)
+                #
+                #     if new_a.any():
+                #         w = new_a
+                #     else:
+                #         new_c = self.type_c(nei, direction)
+                #         if new_c.any():
+                #                 w = new_c
+                #         else:
+                #             w = np.random.random(self.dims)
+                #             w.fill(np.array(self.neurons.values()).min() + 0.5 * (np.array(self.neurons.values()).max() - np.array(self.neurons.values()).min()))
                 #     if new_a.any():
                 #         if new_c.any():
                 #             # w.fill(0.5)
@@ -227,6 +229,40 @@ class GSOM(object):
                 self.hits[str(list(nei))] = 0
             direction += 1
         self.errors[bmu] = self.GT / 2
+
+
+    def get_new_weight(self, old, new):
+
+        grid = np.array(self.grid.values())
+        dists = np.linalg.norm(grid - np.array(new), axis = 1)
+        order1 = np.where(dists ==1)[0]
+        order2 = np.where(dists==2)[0]
+        order2L = np.where(dists==np.sqrt(2))[0]
+        w1 = self.neurons[old]
+        # if order1.shape[0] > 1:
+        try :
+            w2 = self.neurons[self.grid.keys()[order1[np.where(np.linalg.norm(np.array(self.grid.values())[order1] - np.array(self.grid[old]), axis=1)==2)[0]]]]
+            return (w1+w2)/2
+        except TypeError:
+            second_neighbours = order2[np.where(np.linalg.norm(np.array(self.grid.values())[order2] - np.array(self.grid[old]), axis=1) == 1)[0]]
+            third_neighbours = order2L[np.where(np.linalg.norm(np.array(self.grid.values())[order2L] - np.array(self.grid[old]), axis=1) == 1)[0]]
+            try:
+                w2 = self.neurons[self.grid.keys()[second_neighbours]]
+            except:
+                try:
+                    w2 = self.neurons[self.grid.keys()[third_neighbours[0]]]
+                except:
+                    w2 = np.random.random(self.dims) * 2 -1
+            return 2 * w1 - w2
+        # elif order2.shape[0] > 0:
+        #     try:
+        #         w2 = self.neurons[self.grid.keys()[np.where(np.linalg.norm(np.array(self.grid.values())[order2] - np.array(self.grid[old]), axis=1)==1)[0]]]
+        #     except :
+        #         w2 = np.random.random(self.dims)
+        #     return 2*w1 - w2
+
+
+
 
     def type_b(self, nei, direction):
         try:

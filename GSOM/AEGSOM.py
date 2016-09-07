@@ -10,7 +10,7 @@ def sig(x):
 
 class GSOM(object):
 
-    def __init__(self, dims, hid,  sf, fd, max_nodes, min_nodes, radius = 5, scale=1,X=None, nei=True):
+    def __init__(self, dims, hid,  sf, fd, max_nodes, min_nodes, radius = 5, scale=1,X=None, nei=True, gaussian=False):
 
         self.nei = nei
 
@@ -21,7 +21,7 @@ class GSOM(object):
             self.m1 = X.mean()
 
         self.radius = radius
-
+        self.gaussian = gaussian
         self.scale = scale
         self.hid = hid
         self.w1 = {}
@@ -35,7 +35,7 @@ class GSOM(object):
         self.learners = {}
         for i in range(2):
             for j in range(2):
-                AE = AutoEncoder(dims, hid, self.s1, self.m1)
+                AE = AutoEncoder(dims, hid, self.s1, self.m1,  gaussian)
                 self.learners[str([i, j])] = AE
                 self.grid[str([i, j])] = [i, j]
                 self.errors[str([i, j])] = 0
@@ -255,7 +255,7 @@ class GSOM(object):
                 # else:
                 #     w = new_b
 
-                AE = AutoEncoder(self.dims, self.hid, self.s1, self.m1)
+                AE = AutoEncoder(self.dims, self.hid, self.s1, self.m1, gaussian=self.gaussian)
                 # if np.isnan(w1).any():
                 #     print 'shit'
                 AE.set_params(w1, w2, b1, b2)
