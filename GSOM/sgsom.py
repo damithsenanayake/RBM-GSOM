@@ -121,7 +121,7 @@ class GSOM(object):
         hs = np.exp(-(dists / 2*self.range))
         hs = scale(hs, with_mean=False)
         hs /= hs.max()
-        hs.fill(1)
+        # hs.fill(1)
         weights = np.array(self.neurons.values())[neighbors]
 
         weights += np.array([hs]).T * (x - weights) * self.lr
@@ -142,7 +142,7 @@ class GSOM(object):
                 self.Herr += err
 
         for k in np.array(self.neurons.keys())[neighbors]:
-            if self.errors[k] > self.GT and self.max_nodes > len(self.neurons):
+            if k == bmu and self.errors[k] > self.GT and self.max_nodes > len(self.neurons):
                 self.current_gen += 1
                 self.grow(k)
 

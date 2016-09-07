@@ -48,10 +48,17 @@ class AutoEncoder(object):
         print ""
         return ret
     def train(self, X, iters, eps, momentum=0.5, wd_param = 0.1):
-        l2 = None
+        d1 = 0.01
+        d2 = 0.075
+        d3 = 0.0
+
         for i in range(iters):
-            l1 = self.sig(np.dot(X, self.w1) + self.b1)  # 1/(1+np.exp(-(np.dot(X,syn0))))
-            l2 = self.sig(np.dot(l1, self.w2) + self.b2)  # 1/(1+np.exp(-(np.dot(l1,syn1))))
+
+            dl_0 = np.random.binomial(1, 1-d1, size=X.shape[0])
+            dl_1 = np.random.binomial(1, 1-d2, size = self.b1.shape[0])
+            dl_2 = np.random.binomial(1, 1-d3, size = X.shape[0])
+            l1 = dl_1*self.sig(np.dot(X*np.array([dl_0]).T, self.w1) + self.b1)  # 1/(1+np.exp(-(np.dot(X,syn0))))
+            l2 = np.array([dl_2]).T*self.sig(np.dot(l1, self.w2) + self.b2)  # 1/(1+np.exp(-(np.dot(l1,syn1))))
             l2_delta = (X - l2) * (l2 * (1 - l2))
             l1_delta = l2_delta.dot(self.w2.T) * (l1 * (1 - l1))
 
@@ -59,7 +66,7 @@ class AutoEncoder(object):
             avg = np.average(l1, axis=0)
             targ = np.ones(avg.shape) * 0.01
             sparse_term = (- targ/(avg+0.0000000001) + (1-targ)/(1.00000000000001-avg)) * (l1 * (1-l1))
-            l1_delta += 0.01*sparse_term
+            l1_delta += 0*sparse_term
 
             dw2 = eps * (l1.T.dot(l2_delta) + momentum *self.mw2 - wd_param*self.w2)
             dw1= eps * (X.T.dot(l1_delta) + momentum*self.mw1 - wd_param*self.w1)

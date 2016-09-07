@@ -110,8 +110,7 @@ class GSOM(object):
                 for k in self.grid.keys():
                     if len(self.hits.values()) > self.min_nodes and (
                                 self.hits[k] < max(lower, 1) or self.hits[k] > upper or self.gen[
-                        k] < self.current_gen * 0.5 * np.exp(
-                                -i / iterations)):  # and len(self.grid) > or self.gen[k] < self.current_gen * 0.75 self.min_nodes   :
+                        k] < self.current_gen * 0.5 * np.exp(-i / iterations)):  # and len(self.grid) > or self.gen[k] < self.current_gen * 0.75 self.min_nodes   :
                         del self.gen[k]
                         del self.errors[k]
                         del self.learners[k]
@@ -156,7 +155,7 @@ class GSOM(object):
             self.current_gen += 1
             self.grow(bmu)
         for k in np.array(self.grid.keys())[neighbors]:
-            if self.errors[k] > self.GT and self.max_nodes > len(self.grid):
+            if k == bmu and self.errors[k] > self.GT and self.max_nodes > len(self.grid):
                 self.current_gen += 1
                 self.grow(k)
 

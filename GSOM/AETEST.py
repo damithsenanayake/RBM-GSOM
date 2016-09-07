@@ -29,7 +29,7 @@ def visualizeW1(opt_W1, vis_patch_side, hid_patch_side):
 
 
 fdat = pd.read_csv('/home/senanayaked/data/mnist_train.csv', header=None)
-x = np.array(fdat)[:60000, 1:]
+x = np.array(fdat)[:10000, 1:]
 X = np.array(x).astype(float)/255.0
 
 st = time.time()
@@ -37,7 +37,7 @@ st = time.time()
 ae = AutoEncoder(vis=784, hid=100)
 
 Y=ae.train_batch(X, 50, 0.00075,batch_size=
-                 200)
+                 100)
 ela = time.time()-st
 print ela /1000
 plt.imshow(np.reshape(Y[0]*255, (28,28)))
