@@ -7,12 +7,12 @@ class AutoEncoder(object):
     def __init__(self, vis, hid, s = None, m= None, gaussian = False):
         self.w1 =2* (np.random.random((vis, hid)) - 0.5) * 0.00001 #* 0.001
         if gaussian:
-            self.w1 = np.random.randn(vis, hid)
-        # if s != None:
-        #     self.w1 *= s
+            self.w1 = np.random.randn(vis, hid)*0.3
+        if s != None:
+            self.w1 = s * np.random.randn(vis, hid)
         # if m != None:
         #     self.w1 += m
-        #(np.random.random((784,100)) * 2-1)*0.1
+        # (np.random.random((784,100)) * 2-1)*0.1
         self.w2 = self.w1.T
         self.b1 = np.random.randn(hid) #* 0.001
         self.b2 = np.random.randn(vis) #* 0.001
@@ -49,7 +49,7 @@ class AutoEncoder(object):
         return ret
     def train(self, X, iters, eps, momentum=0.5, wd_param = 0.1):
         d1 = 0.01
-        d2 = 0.075
+        d2 = 0.05
         d3 = 0.0
 
         for i in range(iters):

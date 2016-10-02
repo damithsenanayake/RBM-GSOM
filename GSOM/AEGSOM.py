@@ -99,7 +99,7 @@ class GSOM(object):
                 sys.stdout.flush()
             self.lr *= (1 - 3.8 / len(self.grid))
             if self.range > 1.414:
-                self.range = self.radius * np.exp(- min(self.learn_iters,10) / 10.0)
+                self.range = self.radius * np.exp(- self.learn_iters/ 25)
             if prune:
                 hits = np.array(self.hits.values())
                 mean = hits.mean()
@@ -135,7 +135,7 @@ class GSOM(object):
         bmu, err = self.find_bmu(x)
 
         neighbors , dists = self.get_neighbourhood(bmu)
-        hs = np.exp(-(dists**2 / (2*self.range**2)))/np.sum(np.exp(-(dists**2 / (2*self.range**2))))
+        hs = np.exp(-(dists**2 / (2*self.range**2)))#/np.sum(np.exp(-(dists**2 / (2*self.range**2))))
 
 
         for neighbor, h in zip(neighbors, hs):
@@ -163,13 +163,19 @@ class GSOM(object):
         arr = []
         hits = []
         for x in X:
-            hit = self.find_bmu(x, reg=False)[0]
+            hit , dist = self.find_bmu(x, reg=False)
+            m = []
+            for n in np.array(self.learners.keys())[self.get_neighbours(hit)[0]]:
+                if n != hit:
+                    m.append(np.exp(-np.linalg.norm(x-self.reconstruct(x, n)))*(np.array(self.grid[hit])-np.array(self.grid[n])))
+            b = self.grid[hit]
+            b += np.array(m).sum(axis=0)
             hits.append(hit)
             try:
                 self.hits[hit] += 1
             except KeyError:
                 self.hits[hit] = 1
-            arr.append(self.grid[hit])
+            arr.append(b)
 
         return np.array(arr), hits
 
@@ -208,6 +214,12 @@ class GSOM(object):
         node_dists = p_dist_matrix[np.where(np.array(self.grid.keys())==node)[0]][0]
         return np.where(node_dists< self.range)[0], node_dists[np.where(node_dists<self.range)[0]]#np.array(self.grid.keys())
 
+    def get_neighbours(self, node):
+        p_dist_matrix = pairwise_distances(np.array(self.grid.values()))
+        # np.fill_diagonal(p_dist_matrix, np.Infinity)
+        node_dists = p_dist_matrix[np.where(np.array(self.grid.keys()) == node)[0]][0]
+        return np.where(node_dists < 1.1)[0], node_dists[
+            np.where(node_dists < 1.1)[0]]  # np.array(self.grid.keys())
 
     def grow(self, bmu):
         # type: (object) -> object

@@ -34,9 +34,9 @@ X = np.array(x).astype(float)/255.0
 
 st = time.time()
 
-ae = AutoEncoder(vis=784, hid=100)
+ae = AutoEncoder(vis=784, hid=100, gaussian=True)
 
-Y=ae.train_batch(X, 50, 0.00075,batch_size=
+Y=ae.train_batch(X, 400, 0.00075,batch_size=
                  100)
 ela = time.time()-st
 print ela /1000

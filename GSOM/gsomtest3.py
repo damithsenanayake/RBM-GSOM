@@ -17,19 +17,19 @@ labels = np.array(fi)[:, 0]
 # reductor = AutoEncoder(hid_size=100)
 # X = reductor.reduce(dat)
 
-gsom = GSOM(dims=784, hid = 192, sf = 0.7, fd = 0.3, max_nodes = 1200, min_nodes = 10, radius=5, scale = 1, X=dat)
+gsom = GSOM(dims=784, hid = 81, sf = 0.8, fd = 0.9, max_nodes = 2500, min_nodes = 10, radius=40, scale = 1, X=dat, nei=False, gaussian=True)
 
 
-for i in range(100):
+for i in range(1):
     print '\nbatch '+ str(i+1)
     prune = False
     if i %4 ==1:
         prune = True
-    gsom.train_batch(dat[i*500:(i+1)*500], lr = 0.01*np.exp(-i/ 10),  iterations=1, prune=(i!=199))#lr=0.01*np.exp(-i/200), iterations=100)
+    gsom.train_batch(dat[i*500:(i+1)*500], lr = 1*np.exp(-i/ 10),  iterations=50, prune=False)#lr=0.01*np.exp(-i/200), iterations=100)
     # if len(gsom.neurons) > gsom.max_nodes:
     #     gsom.cull_old()
 # gsom.prune()
-grid, hits = gsom.predict((dat[:1000]))
+grid, hits = gsom.predict((dat[:500]))
 x, y = grid.T
 colors = dat
 nodes = np.unique(np.array(hits))
@@ -40,10 +40,10 @@ for n in nodes:
     ninds = np.where(np.array(hits)==n)[0]
     batches.append(dat[ninds])
 
-plt.scatter(x, y, s=1)
+plt.scatter(x, y, s=1, color='white')
 
 for i, j, t in zip(x, y, labels):
-    plt.text(i, j, t, color = 'purple', fontsize = 12)
+    plt.text(i, j, t, color = plt.cm.Set1(t/10.0), fontsize = 12)
 plt.show()
 
 plt.scatter(x, y, s=1)
