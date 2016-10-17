@@ -145,6 +145,11 @@ class GSOM(object):
             if k == bmu and self.errors[k] > self.GT and self.max_nodes > len(self.neurons):
                 self.current_gen += 1
                 self.grow(k)
+                del self.gen[k]
+                del self.errors[k]
+                del self.neurons[k]
+                del self.grid[k]
+                del self.hits[k]
 
     def predict(self, X):
         arr = []
@@ -191,17 +196,43 @@ class GSOM(object):
         left = p + np.array([-1, 0])
 
         neighbors = np.array([up, right, down, left])
+        direction = 0
         for nei in neighbors:
             try:
                 self.errors[str(list(nei))] += self.errors[bmu] * self.fd
             except KeyError:
+                new_b = self.type_b(nei, direction)
                 w = self.get_new_weight(bmu, nei)
+                # if new_b.any():
+                #     w = new_b
+                # else:
+                #     new_a = self.type_a(nei, direction)
+                #
+                #     if new_a.any():
+                #         w = new_a
+                #     else:
+                #         new_c = self.type_c(nei, direction)
+                #         if new_c.any():
+                #                 w = new_c
+                #         else:
+                #             w = np.random.random(self.dims)
+                #             w.fill(np.array(self.neurons.values()).min() + 0.5 * (np.array(self.neurons.values()).max() - np.array(self.neurons.values()).min()))
+                #     if new_a.any():
+                #         if new_c.any():
+                #             # w.fill(0.5)
+                #         else:
+                #             w = new_c
+                #     else:
+                #         w = new_a
+                # else:
+                #     w = new_b
 
                 self.neurons[str(list(nei))] = w
                 self.grid[str(list(nei))] = list(nei)
                 self.errors[str(list(nei))] = self.GT/2
                 self.gen[str(list(nei))] = self.current_gen
                 self.hits[str(list(nei))] = 0
+            direction += 1
         self.errors[bmu] = self.GT / 2
 
 

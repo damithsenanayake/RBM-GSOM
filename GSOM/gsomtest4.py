@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from AEGSOM import  GSOM
+from WGSOM import  GSOM
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import normalize
 from sklearn.manifold import TSNE
@@ -25,7 +25,7 @@ gsom = GSOM(dims=92, hid = 2, sf = 0.8, fd = 0.9, max_nodes = 2000, min_nodes = 
 
 for i in range(40):
     print "\nbatch ", (i+1)
-    gsom.train_batch(X[indices], iterations=1, lr = 0.25*np.exp(-i/10), prune=False)
+    gsom.train_batch(X[indices], iterations=1, lr = 0.25*np.exp(-i/10), prune=True)
 
 # gsom.prune()
 

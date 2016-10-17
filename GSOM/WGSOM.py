@@ -99,8 +99,9 @@ class GSOM(object):
                 self.batch_nn_train(X, self.lr)
                 sys.stdout.write('\r epoch %i / %i : nodes - %i' %((i+1), iterations, len(self.grid)))
                 sys.stdout.flush()
-            self.lr *= (1 - 3.8 / len(self.learners))
-            self.range = self.radius * np.exp(- i / iterations)
+            self.lr *= (1 - 3.8 / len(self.grid))
+            if self.range > 1.414:
+                self.range = self.radius * np.exp(- self.learn_iters/ 25)
         if prune:
             hits = np.array(self.hits.values())
             mean = hits.mean()
@@ -160,6 +161,11 @@ class GSOM(object):
             if k == bmu and self.errors[k] > self.GT and self.max_nodes > len(self.grid):
                 self.current_gen += 1
                 self.grow(k)
+                del self.gen[k]
+                del self.errors[k]
+                del self.learners[k]
+                del self.grid[k]
+                del self.hits[k]
 
     def predict(self, X):
         arr = []
@@ -232,13 +238,45 @@ class GSOM(object):
         left = p + np.array([-1, 0])
 
         neighbors = np.array([up, right, down, left])
+        direction = 0
         for nei in neighbors:
             try:
                 self.errors[str(list(nei))] += self.errors[bmu] * self.fd
             except KeyError:
-                w1, w2, b1, b2 = self.get_new_weight(bmu, nei)
-                AE = AutoEncoder(self.dims, self.hid, self.s1, self.m1, gaussian=self.gaussian)
+                try:
+                    w1, w2, b1, b2 = self.type_b(nei, direction)
+                    if np.isnan(w1).any():
+                        print 'shit'
+                except:
+                    try:
+                        w1, w2, b1, b2 = self.type_a(nei, direction)
+                        if np.isnan(w1).any():
+                            print 'shit'
+                    except:
+                        try:
+                            w1, w2, b1, b2 = self.type_c(nei, direction)
+                            if np.isnan(w1).any():
+                                print 'shit'
 
+                        except:
+                            w1 = None
+                            w2 = None#np.ones((self.hid, self.dims))
+                            b1 = None#np.ones(self.hid)
+                            b2 = None#np.ones(self.dims)
+
+                #     if new_a.any():
+                #         if newf_c.any():
+                #             # w.fill(0.5)
+                #         else:
+                #             w = new_c
+                #     else:
+                #         w = new_a
+                # else:
+                #     w = new_b
+
+                AE = AutoEncoder(self.dims, self.hid, self.s1, self.m1, gaussian=self.gaussian)
+                # if np.isnan(w1).any():
+                #     print 'shit'
                 AE.set_params(w1, w2, b1, b2)
 
                 self.learners[str(list(nei))] = AE
@@ -246,49 +284,24 @@ class GSOM(object):
                 self.errors[str(list(nei))] = self.GT/2
                 self.gen[str(list(nei))] = self.current_gen
                 self.hits[str(list(nei))] = 0
+            direction += 1
         self.errors[bmu] = self.GT / 2
-
-    def get_new_weight(self, old, new):
-
-        grid = np.array(self.grid.values())
-        dists = np.linalg.norm(grid - np.array(new), axis=1)
-        order1 = np.where(dists == 1)[0]
-        order2 = np.where(dists == 2)[0]
-        order2L = np.where(dists == np.sqrt(2))[0]
-        n1 = self.learners[old]
-        # if order1.shape[0] > 1:
-        try:
-            n2 = self.learners[self.grid.keys()[order1[
-                np.where(np.linalg.norm(np.array(self.grid.values())[order1] - np.array(self.grid[old]), axis=1) == 2)[
-                    0]]]]
-            return (n1.w1 + n2.w1) / 2, (n1.w2+n2.w2) / 2, (n1.b1 + n2. b1) / 2, (n1.b2 + n2. b2)/2
-        except TypeError:
-            second_neighbours = order2[
-                np.where(np.linalg.norm(np.array(self.grid.values())[order2] - np.array(self.grid[old]), axis=1) == 1)[
-                    0]]
-            third_neighbours = order2L[
-                np.where(np.linalg.norm(np.array(self.grid.values())[order2L] - np.array(self.grid[old]), axis=1) == 1)[
-                    0]]
-            try:
-                n2 = self.learners[self.grid.keys()[second_neighbours]]
-            except:
-                try:
-                    n2 = self.learners[self.grid.keys()[third_neighbours[0]]]
-                except:
-                    n2 = AutoEncoder(self.dims, self.hid, self.s1, self.m1, gaussian=self.gaussian)
-            return 2 * n1.w1 - n2.w1, 2* n1.w2 - n2.w2, 2 * n1.b1 - n2.b1, 2*n1.b2 - n2.b2
-
 
     def type_b(self, nei, direction):
         try:
             if direction == 0 or direction == 2:
+                if np.isnan((self.learners[str(list(nei + np.array([0, -1])))].w1+ self.learners[
+                    str(list((nei + np.array([0, 1]))))].w1)).any():
+                    print "shit1"
 
                 return (self.learners[str(list(nei + np.array([0, -1])))].w1+ self.learners[
                     str(list((nei + np.array([0, 1]))))].w1) * 0.5, (self.learners[str(list(nei + np.array([0, -1])))].w2+ self.learners[
                     str(list((nei + np.array([0, 1]))))].w2) * 0.5, (self.learners[str(list(nei + np.array([0, -1])))].b1+ self.learners[
                     str(list((nei + np.array([0, 1]))))].b1) * 0.5, (self.learners[str(list(nei + np.array([0, -1])))].b2+ self.learners[
                     str(list((nei + np.array([0, 1]))))].b2) * 0.5
-
+            if np.isnan((self.learners[str(list(nei + np.array([-1, 0])))].w1 + self.learners[
+                str(list(nei + np.array([1, 0])))].w1) * 0.5).any():
+                print 'shit2'
             return (self.learners[str(list(nei + np.array([-1, 0])))].w1 + self.learners[
                 str(list(nei + np.array([1, 0])))].w1) * 0.5, (self.learners[str(list(nei + np.array([-1, 0])))].w2 + self.learners[
                 str(list(nei + np.array([1, 0])))].w2) * 0.5, (self.learners[str(list(nei + np.array([-1, 0])))].b1 + self.learners[
@@ -313,9 +326,13 @@ class GSOM(object):
             bb1 = self.learners[str(list((nei - anc[(direction)])))].b2
             bb2 = self.learners[str(list(nei - 2 * anc[(direction)]))].b2
 
+            if np.isnan(2 * wa1 - wa2).any():
+                print 'shit'
+
             return 2 * wa1 - wa2, 2*wb1 - wb2, 2 * ba1 - ba2, 2* bb1 - bb2
         except KeyError:
             return np.array([0])
+
 
     def type_c(self, nei, direction):
         try:
@@ -335,8 +352,15 @@ class GSOM(object):
                     b2 =2 * self.learners[str(list(nei - anc[direction]))].b2 - self.learners[
                         str(list(nei - anc[direction] + np.array([1, 0])))].b2
 
+                    if np.isnan(w1).any():
+                        print 'shit'
+
+
                     return w1,w2 , b1 , b2
                 except KeyError:
+                    if np.isnan(2 * self.learners[str(list(nei - anc[direction]))].w1 - self.learners[
+                        str(list(nei - anc[direction] + np.array([-1, 0])))].w1).any():
+                        print 'shit'
 
                     return 2 * self.learners[str(list(nei - anc[direction]))].w1 - self.learners[
                         str(list(nei - anc[direction] + np.array([-1, 0])))].w1,2 * self.learners[str(list(nei - anc[direction]))].w2 - self.learners[
@@ -367,12 +391,5 @@ class GSOM(object):
                         str(list(nei - anc[direction] + np.array([0, -1])))].b2
         except KeyError:
             return np.array([0])
-
-
-
-
-
-
-
 
 
