@@ -10,7 +10,7 @@ def sig(x):
 
 class GSOM(object):
 
-    def __init__(self, dims, hid,  sf, fd, max_nodes, min_nodes, radius = 5, scale=1,X=None, nei=True, gaussian=False):
+    def __init__(self, dims, hid,  sf, fd, max_nodes, min_nodes, radius = 5, scale=1,X=None, nei=True, gaussian=False, map_init = 2):
 
         self.nei = nei
 
@@ -33,8 +33,8 @@ class GSOM(object):
         self.hits = {}
         self.gen = {}
         self.learners = {}
-        for i in range(2):
-            for j in range(2):
+        for i in range(map_init):
+            for j in range(map_init):
                 AE = AutoEncoder(dims, hid, self.s1, self.m1,  gaussian)
                 self.learners[str([i, j])] = AE
                 self.grid[str([i, j])] = [i, j]
@@ -55,7 +55,7 @@ class GSOM(object):
         self.learn_iters = 0
 
     def param_learn(self, x, node, h, lr):
-        self.learners.values()[node].train( np.array([x]), min(2,self.learn_iters),h*lr, momentum=0.5, wd_param = 0.1)
+        self.learners.values()[node].train( np.array([x]),200 ,h*lr, momentum=0.25, wd_param = 0.075)#min(1,self.learn_iters),h*lr, momentum=0.5, wd_param = 0.1)
 
     def reconstruct(self, x, node):
         return self.learners[node].predict(np.array([x]))*self.scale
@@ -101,6 +101,7 @@ class GSOM(object):
                 sys.stdout.flush()
             self.lr *= (1 - 3.8 / len(self.learners))
             self.range = self.radius * np.exp(- i / iterations)
+            self.GT *= 0.1
         if prune:
             hits = np.array(self.hits.values())
             mean = hits.mean()
@@ -137,8 +138,10 @@ class GSOM(object):
         bmu, err = self.find_bmu(x, False)
 
         neighbors , dists = self.get_neighbourhood(bmu)
-        hs = np.exp(-(dists**2 / (2*self.range**2)))#/np.sum(np.exp(-(dists**2 / (2*self.range**2))))
-
+        # hs = np.exp(-(dists**2 / (2*self.range**2)))#/np.sum(np.exp(-(dists**2 / (2*self.range**2))))
+        hs = np.exp(-(dists / 2 * self.range))
+        hs = scale(hs, with_mean=False)
+        hs /= hs.max()
 
         for neighbor, h in zip(neighbors, hs):
             #if self.hits.values()[neighbor] < 50: #### This gave good results. See if this had any effects!
