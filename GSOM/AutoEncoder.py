@@ -48,8 +48,8 @@ class AutoEncoder(object):
         print ""
         return ret
     def train(self, X, iters, eps, momentum=0.5, wd_param = 0.1):
-        d1 = 0.01
-        d2 = 0.05
+        d1 = 0.0
+        d2 = 0.0
         d3 = 0.0
 
         for i in range(iters):

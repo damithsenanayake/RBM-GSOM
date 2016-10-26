@@ -10,8 +10,8 @@ def sig(x):
 
 class GSOM(object):
 
-    def __init__(self, dims, hid,  sf, fd, max_nodes, min_nodes, radius = 5, scale=1,X=None, nei=True, gaussian=False, map_init = 2):
-
+    def __init__(self, dims, hid,  sf, fd, max_nodes, min_nodes, radius = 5, scale=1,X=None, nei=True, gaussian=False, map_init = 2, lr = 1):
+        self.lr = lr
         self.nei = nei
 
         self.s1 = None,
@@ -54,13 +54,34 @@ class GSOM(object):
         self.current_gen = 0
         self.learn_iters = 0
 
+    def param_learn_smooth(self, x, node, h, lr):
+        self.learners.values()[node].train(np.array([x]), 50, h * lr, momentum=0.25,
+                                           wd_param=0.01)  # min(1,self.learn_iters),h*lr, momentum=0.5, wd_param = 0.1)
     def param_learn(self, x, node, h, lr):
-        self.learners.values()[node].train( np.array([x]),200 ,h*lr, momentum=0.25, wd_param = 0.075)#min(1,self.learn_iters),h*lr, momentum=0.5, wd_param = 0.1)
+        self.learners.values()[node].train( np.array([x]),1 ,h*lr, momentum=0.75, wd_param = 0.75)#min(1,self.learn_iters),h*lr, momentum=0.5, wd_param = 0.1)
 
     def reconstruct(self, x, node):
         return self.learners[node].predict(np.array([x]))*self.scale
 
-
+    def smooth_batch(self, X, iterations, lr, prune=True):
+        if lr:
+            self.lr = lr
+        self.learn_iters += 1
+        self.same_count = 0
+        self.previous = None
+        for i in range(iterations):
+            self.lr = lr
+            c = 0
+            t = X.shape[0]
+            for x in X:
+                c += 1
+                self.train_single_smooth(x)
+                sys.stdout.write(
+                    '\r epoch %i / %i :  %i%% : nodes - %i' % (i + 1, iterations, c * 100 / t, len(self.grid)))
+                sys.stdout.flush()
+            #
+            #     self.lr *= (1 - 3.8 / len(self.learners))
+            # self.range = (self.radius - 1) * np.exp(- i * 2 / iterations) + 1.00001
 
     def prune(self, k = None):
         if k != None:
@@ -81,45 +102,27 @@ class GSOM(object):
     def train_batch(self, X, iterations, lr, prune):
         # for k in self.grid.keys():
         #     self.hits[k] = 0
-        self.lr = lr
+        if lr:
+            self.lr = lr
         self.learn_iters += 1
         self.same_count = 0
         self.previous = None
         for i in range(iterations):
+            self.lr = lr
+
             c = 0
             lamda = (i+1) / iterations
             t = X.shape[0]
-            if True:#len(self.neurons) < self.max_nodes:
-                for x in X:
-                    c+=1
-                    self.train_single(x)
-                    sys.stdout.write('\r epoch %i / %i :  %i%% : nodes - %i' %(i+1, iterations,c*100/t, len(self.grid) ))
-                    sys.stdout.flush()
-            else:
-                self.batch_nn_train(X, self.lr)
-                sys.stdout.write('\r epoch %i / %i : nodes - %i' %((i+1), iterations, len(self.grid)))
+            for x in X:
+                c+=1
+                self.train_single(x)
+                sys.stdout.write('\r epoch %i / %i :  %i%% : nodes - %i' %(i+1, iterations,c*100/t, len(self.grid) ))
                 sys.stdout.flush()
-            self.lr *= (1 - 3.8 / len(self.learners))
-            self.range = self.radius * np.exp(- i / iterations)
-            self.GT *= 0.1
-        if prune:
-            hits = np.array(self.hits.values())
-            mean = hits.mean()
-            std = hits.std()
-            upper = mean + 3 * std
-            lower = mean - 3 * std
 
-            for k in self.grid.keys():
-                if len(self.hits.values()) > self.min_nodes and (
-                            self.hits[k] < 0.5*max(lower, 1) ) : #or self.gen[
-                    # k] < self.current_gen * 0.5 * np.exp(-i / iterations)):  # and len(self.grid) > or self.gen[k] < self.current_gen * 0.75 self.min_nodes   :
-                    del self.gen[k]
-                    del self.errors[k]
-                    del self.learners[k]
-                    del self.grid[k]
-                    del self.hits[k]
-                else :
-                    self.hits[k] = 0
+                self.lr *= (1 - 3.8 / len(self.learners))
+            self.range = (self.radius -1)  * np.exp(- i * 2 / iterations) + 1.00001
+            # self.GT *= 0.1
+
 
     def prune_unused(self):
         for k in self.neurons.keys():
@@ -132,6 +135,19 @@ class GSOM(object):
                     del self.errors[k]
                 except :
                     continue
+
+    def train_single_smooth(self, x):
+        bmu, err = self.find_bmu(x, False)
+
+        neighbors, dists = self.get_neighbourhood(bmu)
+        # hs = np.exp(-(dists**2 / (2*self.range**2)))#/np.sum(np.exp(-(dists**2 / (2*self.range**2))))
+        hs = np.exp(-(dists / 2 * self.range))
+        hs = scale(hs, with_mean=False)
+        hs /= hs.max()
+
+        for neighbor, h in zip(neighbors, hs):
+            self.param_learn_smooth(x, neighbor, h, self.lr)
+
 
 
     def train_single(self, x):
@@ -155,14 +171,13 @@ class GSOM(object):
         except KeyError:
             self.errors[bmu] = err
         if self.errors[bmu] > self.Herr:
-                self.Herr += err
-        if self.errors[bmu] > self.GT and self.max_nodes > len(self.grid):
-            self.current_gen += 1
-            self.grow(bmu)
-        for k in np.array(self.grid.keys())[neighbors]:
-            if k == bmu and self.errors[k] > self.GT and self.max_nodes > len(self.grid):
-                self.current_gen += 1
-                self.grow(k)
+                self.Herr =self.errors[bmu]
+        if self.Herr > self.GT and self.max_nodes > len(self.grid):
+            self.Herr = self.GT
+            for k in np.array(self.grid.keys())[neighbors]:
+                if k == bmu and self.errors[k] > self.GT and self.max_nodes > len(self.grid):
+                    self.current_gen += 1
+                    self.grow(k)
 
     def predict(self, X):
         arr = []

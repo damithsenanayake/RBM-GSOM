@@ -9,7 +9,7 @@ class SOM(object):
         #         grid.append([x, y])
         # self.grid = np.array(grid).astype(float)
         self.errors = np.zeros(grid_side*grid_side)
-        self.GT = - dims * np.log(0.001)
+        self.GT = - dims * np.log(0.000001)
         self.gamma = 2
         self.grid = np.random.random((grid_side * grid_side, 2))
 
@@ -41,7 +41,7 @@ class SOM(object):
         return np.array(out)
 
     def train(self, X):
-        rad = 1
+        rad = 0.5
 
         for b in range(0,100):
             for x in X:
@@ -60,7 +60,7 @@ class SOM(object):
                 m = max(dists)
                 h = np.exp(-dists ** 2 / m ** 2)
 
-                self.grid[neighbors] += 0.01*(self.grid[bmu] - self.grid[neighbors])*np.array([h]).T/h.sum()
+                self.grid[neighbors] += 0.001*(self.grid[bmu] - self.grid[neighbors])*np.array([h]).T
 
                 if self.errors[bmu] > self.GT:
                     if self.neurons.shape[0]< 750:
@@ -74,7 +74,7 @@ class SOM(object):
                     neighbors, dists = self.get_neighborhood(bmu, rad)
                     m = max(dists)
                     h = np.exp(-dists ** 2 / m ** 2)
-                    self.errors[neighbors] += self.errors[bmu] * 0.001 * h / h.sum()
+                    self.errors[neighbors] += self.errors[bmu] * 0.00001 * h / h.sum()
 
             rad *= 0.9
             # self.gamma -=1
