@@ -6,20 +6,19 @@ from sgsom import GSOM as GS
 
 rgen = np.random.RandomState(1234)
 
-X = rgen.random_sample(size=(400, 3))
-
-gsom = GSOM(dims=3, hid = 1,  fd=0.25, sf=0.1, radius=5,max_nodes=1000, min_nodes=100, X = X,nei=True,gaussian=True)
-# gsom = GS(dims=3, sf=0.1, fd=0.25, max_nodes=10000, min_nodes=5, radius=5)
+X = np.array(pd.read_csv('~/data/4C_2M.csv', header=None))
+# gsom = GSOM(dims=3, hid = 1,  fd=0.1, sf=0.075, radius=5,max_nodes=1000, min_nodes=100, X = X,nei=True,gaussian=True)
+gsom = GS(dims=2, sf=0.7, fd=0.25, max_nodes=10000, min_nodes=5, radius=5)
 for i in range(1):
     print "\n iteration ", (i+1)
-    gsom.train_batch(X, 100, 1, False)
+    gsom.train_batch(X, 20, 1, False)
 
 
-gsom.smooth_batch(X, 100, 0.01, False)
+gsom.smooth_batch(X, 20, 0.01, False)
 
 grid, hits = gsom.predict(X)
 x, y = grid.T
-plt.scatter(x, y, alpha = 0.75, c= X, edgecolors='none' )
+plt.scatter(x, y, alpha = 0.75, c= np.array(range(X.shape[0]))/250, edgecolors='none' , s=50)
 plt.show()
 
 x, y = np.array(gsom.grid.values()).T

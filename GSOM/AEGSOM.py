@@ -139,7 +139,7 @@ class GSOM(object):
     def train_single_smooth(self, x):
         bmu, err = self.find_bmu(x, False)
 
-        neighbors, dists = self.get_neighbourhood(bmu)
+        neighbors, dists = self.get_neighbourhood_smooth(bmu)
         # hs = np.exp(-(dists**2 / (2*self.range**2)))#/np.sum(np.exp(-(dists**2 / (2*self.range**2))))
         hs = np.exp(-(dists / 2 * self.range))
         hs = scale(hs, with_mean=False)
@@ -233,6 +233,12 @@ class GSOM(object):
         #np.fill_diagonal(p_dist_matrix, np.Infinity)
         node_dists = p_dist_matrix[np.where(np.array(self.grid.keys())==node)[0]][0]
         return np.where(node_dists< self.range)[0], node_dists[np.where(node_dists<self.range)[0]]#np.array(self.grid.keys())
+
+    def get_neighbourhood_smooth(self, node):
+        p_dist_matrix = pairwise_distances(np.array(self.grid.values()))
+        # np.fill_diagonal(p_dist_matrix, np.Infinity)
+        node_dists = p_dist_matrix[np.where(np.array(self.grid.keys()) == node)[0]][0]
+        return np.where(node_dists < 1.1)[0], node_dists[np.where(node_dists < 1.1)[0]]
 
     def get_neighbours(self, node):
         p_dist_matrix = pairwise_distances(np.array(self.grid.values()))
