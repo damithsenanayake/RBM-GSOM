@@ -50,7 +50,7 @@ class SelfOrganizingSwarm(object):
         self.grid = np.array(self.grid).astype(float)
 
         self.grid = np.random.random((X.shape[0]  , self.d))
-        self.C = np.ones((self.grid.shape[0], X.shape[1])) * X.mean(axis=0)
+        self.C = np.ones((self.grid.shape[0], X.shape[1])) * X.mean()
         verbosity_limit = self.iterations * self.verbose
         for it in range(self.iterations):
             # if not (it % verbosity_limit):
@@ -61,15 +61,13 @@ class SelfOrganizingSwarm(object):
                 neighbors = self.get_neighbors(bmu)
                 self.neighbors = neighbors
                 dists = np.linalg.norm(self.grid[neighbors] - self.grid[bmu], axis=1)
-                if  dists.shape[0]:
-                    rad = dists.max()
-                else :
-                    continue
+                rad = dists.max()
                 moving_amounts =  np.array([np.exp(-0.5*dists**2/rad**2)]).T#/np.sum(np.exp(-dists**2/rad**2)) #/((np.sum(np.array([np.exp(-dists)]).T) ) * dists.shape[0])
-                moving_amounts/=moving_amounts.sum()
-                self.C[neighbors] += 0.5 * (x - self.C[neighbors]) * np.exp(-it / (self.iterations))  * moving_amounts
-
-
+                # moving_amounts/=moving_amounts.sum()
+                self.C[neighbors] += 1* (x - self.C[neighbors]) * np.exp(-it / (self.iterations))  * moving_amounts
+        print 'moving'
+        for it in range(10*self.iterations):
+            sys.stdout.write('\r iteration %s' % str(it + 1))
             for x in X:
                 bmu = np.argmin(np.linalg.norm(self.C - x, axis=1))
                 neighbors = self.get_neighbors(bmu)
@@ -78,43 +76,13 @@ class SelfOrganizingSwarm(object):
 
                 dists = np.linalg.norm(self.C[neighbors] - x, axis=1)
 
-                mean = dists.mean()
-                variance = dists.var()
-                try:
-                    rad = dists.max()
-                except:
-                    continue
-                inds = np.where((dists - mean)/np.sqrt(variance) >2.05)[0]
-                far_ones = neighbors[inds]
-                close_ones = np.setdiff1d(neighbors, far_ones)
-                nei_inds = np.setdiff1d(np.array(range(dists.shape[0])), inds)
-                try:
-                    nei_dists =dists[nei_inds]
-                except:
-                    continue
-                neighbors = close_ones
-                not_neighbors = far_ones
-                moving_amounts = np.array([np.exp(-0.5*nei_dists**2/rad**2)]).T #/ nei_dists.shape[0]
+                dists /= sum(dists)
 
-                moving_directions = self.grid[bmu] - self.grid[neighbors]
-                self.grid[neighbors] += 0.25*np.exp(-it / (1 * self.iterations)) * moving_amounts * moving_directions
-
-                not_nei_dists = dists[inds]
-                if not not_nei_dists.shape[0] == 0:
-                    not_nei_dists/=rad
-                moving_amounts =np.array([np.exp(-0.5*not_nei_dists**2)]).T#/ not_nei_dists.shape[0]
-
-                moving_directions = self.grid[bmu] - self.grid[not_neighbors]
-                self.grid[not_neighbors] -= 0.25*np.exp(-it / (1 * self.iterations)) * moving_amounts * moving_directions
-
-                # others = np.setdiff1d(np.array(range(X.shape[0])), neighbors)
-                #
-                # dists = np.linalg.norm(self.C[others] - x, axis=1)
-                # dists /= (dists.max())
-                # moving_directions = self.grid[others]-self.grid[bmu]
-                # moving_amounts = np.array([np.exp(-0.5* dists ** 2)]).T
-                #
-                # self.grid[others] -= 0.1*np.exp(-it/(0.01*self.iterations)) * moving_amounts * moving_directions
+                manifold = np.linalg.norm(self.grid[neighbors]-self.grid[bmu], axis= 1)
+                manifold /= sum(manifold)
+                amounts = dists - manifold
+                directions = self.grid[bmu] - self.grid[neighbors]
+                self.grid[neighbors] += 1* np.exp(-it/0.1*self.iterations)*directions * np.array([amounts]).T
 
 
     def predict(self, X):
