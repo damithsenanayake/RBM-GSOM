@@ -59,17 +59,17 @@ class SelfOrganizingSwarm(object):
         return adj
 
     def fit(self, X):
-        # for i in range(int(np.ceil(np.sqrt(X.shape[0])))):
-        #     for j in range(int(np.ceil(np.sqrt(X.shape[0])))):
-        #         self.grid.append([i, j])
-        #
-        # self.grid = np.array(self.grid).astype(float)
-        # self.grid /= self.grid.max()
+        for i in range(int(np.ceil(np.sqrt(X.shape[0])))):
+            for j in range(int(np.ceil(np.sqrt(X.shape[0])))):
+                self.grid.append([i, j])
+
+        self.grid = np.array(self.grid).astype(float)
+        self.grid /= self.grid.max()
 
         # self.grid = np.random.randn(X.shape[0]  , self.d)
 
 
-        self.grid = np.random.random((X.shape[0]  , self.d))
+        # self.grid = np.random.random((X.shape[0]  , self.d))
         self.C = np.ones((self.grid.shape[0], X.shape[1])) * X.mean(axis=0)
         verbosity_limit = self.iterations * self.verbose
         for it in range(self.iterations):
@@ -96,6 +96,7 @@ class SelfOrganizingSwarm(object):
                 if np.isnan(self.C).any() or np.isinf(self.C).any():
                     print 'error'
             self.tri_change = True
+            #
             for x in X:
 
                 i = np.argmin(np.linalg.norm(self.C - x,axis=1))
@@ -104,16 +105,16 @@ class SelfOrganizingSwarm(object):
 
                 dists = np.linalg.norm(self.C[neighbors] - x, axis=1)
 
-                v = np.sqrt(dists.var())
+                v = dists.var()
                 m = 0#dists.mean()
 
-                z = (dists)/v
-                ps = st.norm.cdf(z)
-                ps[np.where(np.isnan(ps))] = 0
-                ninds = np.where(np.random.binomial(1,ps))[0]#np.where(z < self.theta)[0]
-                neis = neighbors[ninds]
+                # z = np.abs((dists - m)/np.sqrt(v))
+                # ps = st.norm.cdf(z)
+                # ps[np.where(np.isnan(ps))] = 0
+                # ninds = np.where(np.random.binomial(1,ps))[0]#np.where(z < self.theta)[0]
+                neis = neighbors#[ninds]
                 others = np.setdiff1d(np.array(range(X.shape[0])), neis)
-                D = dists[ninds]
+                D = dists#[ninds]
                 D/=D.sum()
 
                 d = np.linalg.norm(self.grid[neis]-self.grid[i], axis=1)
@@ -130,18 +131,24 @@ class SelfOrganizingSwarm(object):
                 indirs = (self.grid[i] - self.grid[neis])
                 # indirs /= np.array([np.linalg.norm(indirs, axis=1)]).T
                 # indirs[np.where(np.isnan(indirs))[0]]=0
-                self.grid[neis] += self.beta* indirs * np.exp(-it/self.iterations)*np.array([np.exp(-D)]).T#* np.array([difs]).T
 
-                d_ = np.linalg.norm(self.C[others] - self.C[i], axis = 1)
-                if d_.shape[0] and d_.max():
-                    d_/=d_.max()
 
-                dirs = self.grid[i] - self.grid[others]
-                l = np.array([np.linalg.norm(dirs, axis = 1)]).T
-                l[l==0]=1
-                dirs/=l
+                # self.grid[neis] += self.beta* indirs * np.exp(-it/self.iterations)*np.array([np.exp(-D)]).T#* np.array([difs]).T
 
-                self.grid[others] -= self.delta*np.array([np.exp(-d_)]).T*dirs* np.exp(-it/self.iterations)
+                diffs = np.array([D-d]).T
+
+                self.grid[neis]-= 1 *self.beta* np.exp(-it/self.iterations) * diffs * (self.grid[i]-self.grid[neis])
+
+                # d_ = np.linalg.norm(self.C[others] - self.C[i], axis = 1)
+                # if d_.shape[0] and d_.max():
+                #     d_/=d_.max()
+                #
+                # dirs = self.grid[i] - self.grid[others]
+                # l = np.array([np.linalg.norm(dirs, axis = 1)]).T
+                # l[l==0]=1
+                # dirs/=l
+                #
+                # self.grid[others] -= self.delta*np.array([np.exp(-d_)]).T*dirs* np.exp(-it/self.iterations)
 
                 if np.isnan(self.grid).any() or np.isinf(self.grid).any():
                     print 'error'
