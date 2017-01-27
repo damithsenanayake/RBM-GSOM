@@ -2,11 +2,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 from SelfOrganizingSwarm import SelfOrganizingSwarm
+from MovingMap import MovingMap
 from sklearn.manifold import TSNE, Isomap, MDS
 from sklearn.decomposition import PCA
 X = np.array(pd.read_csv('~/data/spiral.csv', header=None))#np.random.random((100, 3))
-# X = np.append(X, np.random.random(X.shape), axis=1)
-s = SelfOrganizingSwarm(iterations=1000, alpha=1, beta=0.5, delta=0.0)
+X = np.append(X, np.random.random((X.shape[0], 100)), axis=1)
+s = MovingMap()#(iterations=1000, alpha=1, beta=0.5, delta=0.0)
 s.fit(X[np.random.permutation(X.shape[0])])
 Y = s.predict(X)
 

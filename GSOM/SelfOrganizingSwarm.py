@@ -32,14 +32,7 @@ class SelfOrganizingSwarm(object):
         return neis  # np.where(self.G[point])[0]
 
     def get_neighbors(self, point):
-        if self.tri_change and (not np.random.binomial(1,self.ts*1.0 / (self.ts + self.fs) ) or self.G == None):#self.ts*1.0 / (self.ts + self.fs)<0.75:
-
-            self.G = self.triangulate()
-        if np.all(self.G==self.P):
-            self.ts +=1
-        else :
-            self.fs += 1
-            self.P = self.G
+        self.G = self.triangulate()
         return np.where(self.G[point])[0]
         # return np.linalg.norm(self.grid - self.grid[point], axis=1).argsort()[:2]
 
@@ -59,17 +52,17 @@ class SelfOrganizingSwarm(object):
         return adj
 
     def fit(self, X):
-        # for i in range(int(np.ceil(np.sqrt(X.shape[0])))):
-        #     for j in range(int(np.ceil(np.sqrt(X.shape[0])))):
-        #         self.grid.append([i, j])
+        for i in range(int(np.ceil(np.sqrt(X.shape[0])))):
+            for j in range(int(np.ceil(np.sqrt(X.shape[0])))):
+                self.grid.append([i, j])
         #
-        # self.grid = np.array(self.grid).astype(float)
-        # self.grid /= self.grid.max()
-
+        self.grid = np.array(self.grid).astype(float)
+        self.grid /= self.grid.max()
+        #
         # self.grid = np.random.randn(X.shape[0]  , self.d)
 
 
-        self.grid = np.random.random((X.shape[0]  , self.d))
+        # self.grid = np.random.random((X.shape[0]  , self.d))
         self.C = np.ones((self.grid.shape[0], X.shape[1])) * X.mean(axis=0)
         verbosity_limit = self.iterations * self.verbose
         for it in range(self.iterations):
@@ -108,7 +101,7 @@ class SelfOrganizingSwarm(object):
                 m = 0#dists.mean()
 
                 z = (dists)/v
-                ps = st.norm.cdf(z)
+                ps = 1-2*st.norm.pdf(z)
                 ps[np.where(np.isnan(ps))] = 0
                 ninds = np.where(np.random.binomial(1,ps))[0]#np.where(z < self.theta)[0]
                 neis = neighbors[ninds]

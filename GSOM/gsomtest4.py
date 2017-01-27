@@ -6,8 +6,10 @@ from sklearn.preprocessing import normalize
 from sklearn.manifold import TSNE
 from sklearn.decomposition import PCA, KernelPCA
 from SelfOrganizingSwarm import SelfOrganizingSwarm
+from MovingMap import MovingMap
 from sklearn.cluster import AffinityPropagation, DBSCAN, KMeans
 from sklearn.metrics import normalized_mutual_info_score
+from bgsom import GSOM
 data = pd.read_csv("~/data/2D3C_RAW.csv", header=None)
 
 X = np.array(data)
@@ -36,7 +38,11 @@ indices = np.random.permutation(X.shape[0])
 # grid, hits = gsom.predict(X)
 # x, y = grid.T
 
-Y = SelfOrganizingSwarm(iterations=50, alpha=1, beta=0.9, delta= 0.001 , theta=3.5).fit_transform(X)
+# Y = SelfOrganizingSwarm(iterations=25, alpha=1, beta=0.5, delta= 0.01 , theta=3.5).fit_transform(X)
+# Y = MovingMap(iterations=25, beta=1).fit_transform(X)
+
+Y = GSOM().fit_transform(X, beta=0.25)
+
 x, y = Y.T
 # plt.scatter(X.T[0], X.T[1])
 # plt.show()
