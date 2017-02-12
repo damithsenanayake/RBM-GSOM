@@ -41,7 +41,7 @@ indices = np.random.permutation(X.shape[0])
 # Y = SelfOrganizingSwarm(iterations=25, alpha=1, beta=0.5, delta= 0.01 , theta=3.5).fit_transform(X)
 # Y = MovingMap(iterations=25, beta=1).fit_transform(X)
 
-Y = GSOM().fit_transform(X, beta=0.25)
+Y = GSOM().fit_transform(X, beta=0.5, lr=0.5)
 
 x, y = Y.T
 # plt.scatter(X.T[0], X.T[1])

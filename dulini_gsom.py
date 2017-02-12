@@ -52,8 +52,8 @@ class GSOM(object):
     #             c += 1
     #             self.train_single(x)
     #             sys.stdout.write(
-    #                 '\r epoch %i / %i :  %i%% : nodes - %i' % (i + 1, iterations, c * 100 / t, len(self.neurons)))
-    #         self.lr *= (1 - 3.8 / len(self.neurons))
+    #                 '\r epoch %i / %i :  %i%% : nodes - %i' % (i + 1, iterations, c * 100 / t, len(self.w)))
+    #         self.lr *= (1 - 3.8 / len(self.w))
     #         if i > 1 and i%prune_thresh ==0:
     #             self.predict(X)
     #             self.prune_unused()
@@ -65,7 +65,7 @@ class GSOM(object):
             c = 0
             lamda = (i+1) / iterations
             t = X.shape[0]
-            if True:#len(self.neurons) < self.max_nodes:
+            if True:#len(self.w) < self.max_nodes:
                 for x in X:
                     c+=1
                     self.train_single(x)
@@ -97,8 +97,8 @@ class GSOM(object):
         hs = np.exp(-(dists / 2*self.range))
 
         for neighbor, h in zip(neighbors, hs):
-            self.neurons[neighbor] += h * self.lr* (x - self.neurons[neighbor]) #* self.lr * (x - self.neurons[neighbor])
-            # self.neurons[neighbor] +=  self.lr* (x - self.neurons[neighbor]) #* self.lr * (x - self.neurons[neighbor])
+            self.neurons[neighbor] += h * self.lr* (x - self.neurons[neighbor]) #* self.lr * (x - self.w[neighbor])
+            # self.w[neighbor] +=  self.lr* (x - self.w[neighbor]) #* self.lr * (x - self.w[neighbor])
             try:
                 if self.errors[neighbor] > self.GT and self.max_nodes > len(self.neurons):
                     self.grow(neighbor)
@@ -109,7 +109,7 @@ class GSOM(object):
         except KeyError:
             self.errors[bmu] = err
 
-        # if self.errors[bmu] > self.GT and self.max_nodes > len(self.neurons):
+        # if self.errors[bmu] > self.GT and self.max_nodes > len(self.w):
         #     self.grow(bmu)
 
     def predict(self, X):

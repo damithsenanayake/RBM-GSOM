@@ -88,8 +88,8 @@ for k in range(101):
 
 colors = []
 # for i in range(10) :
-#     w = gsom.neurons[gsom.neurons.keys()[i]].rbm.w.T
-#     visualizeW1(w, 28, 14, gsom.neurons.keys()[i])
+#     w = gsom.w[gsom.w.keys()[i]].rbm.w.T
+#     visualizeW1(w, 28, 14, gsom.w.keys()[i])
 
 #
 # i = 0

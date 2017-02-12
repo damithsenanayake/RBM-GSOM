@@ -93,7 +93,7 @@ class GSOM(object):
             lamda = (i+1) / iterations
             t = X.shape[0]
 
-            if True:#len(self.neurons) < self.max_nodes:
+            if True:#len(self.w) < self.max_nodes:
                 for x in X:
                     self.visited.append(c)
                     c+=1

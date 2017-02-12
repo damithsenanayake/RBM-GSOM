@@ -82,8 +82,8 @@ class GSOM(object):
                                 cut += 1
                                 del self.neurons[k]
                                 continue
-                            # if self.neurons[k].r_error < self.GT :
-                            #     del self.neurons[k]
+                            # if self.w[k].r_error < self.GT :
+                            #     del self.w[k]
                             #     cut +=1
                     self.range *= 0.9
 
@@ -91,9 +91,9 @@ class GSOM(object):
             print '\nepoch :', i, ' nodes : ', len(self.neurons.keys()), 'dead: ', dead, 'cut :', cut
             t = 0
 
-            # for k in self.neurons.keys():
-            #     if self.neurons[k].r_error > self.GT * 0.9:
-            #         del self.neurons[k]
+            # for k in self.w.keys():
+            #     if self.w[k].r_error > self.GT * 0.9:
+            #         del self.w[k]
             #         t+=1
             # print 'deleted nodes: ', t
 

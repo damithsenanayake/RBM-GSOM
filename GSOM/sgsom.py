@@ -86,7 +86,7 @@ class GSOM(object):
                 sys.stdout.write(
                     '\r epoch %i / %i :  %i%% : nodes - %i' % (i + 1, iterations, c * 100 / t, len(self.neurons)))
                 sys.stdout.flush()
-            #     self.lr *= (1 - 3.8 / len(self.neurons))
+            #     self.lr *= (1 - 3.8 / len(self.w))
             # self.range = (self.radius - 1) * np.exp(- i / iterations) + 1.00001
 
     def train_single_smooth(self, x):

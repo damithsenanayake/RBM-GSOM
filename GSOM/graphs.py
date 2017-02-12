@@ -9,7 +9,7 @@ z = []
 it = 40
 for i in range(it):
 
-    y.append(a *np.exp(-7.5*i/it))
+    y.append(a *np.exp(-2.5*i/20))
     # b *= np.exp(-0.1*i**2/it**2)
     # z.append(b)
     x.append(i)

@@ -63,8 +63,8 @@ class GSOM(object):
     #             c += 1
     #             self.train_single(x)
     #             sys.stdout.write(
-    #                 '\r epoch %i / %i :  %i%% : nodes - %i' % (i + 1, iterations, c * 100 / t, len(self.neurons)))
-    #         self.lr *= (1 - 3.8 / len(self.neurons))
+    #                 '\r epoch %i / %i :  %i%% : nodes - %i' % (i + 1, iterations, c * 100 / t, len(self.w)))
+    #         self.lr *= (1 - 3.8 / len(self.w))
     #         if i > 1 and i%prune_thresh ==0:
     #             self.predict(X)
     #             self.prune_unused()
@@ -85,7 +85,7 @@ class GSOM(object):
             c = 0
             lamda = (i+1) / iterations
             t = X.shape[0]
-            if True:#len(self.neurons) < self.max_nodes:
+            if True:#len(self.w) < self.max_nodes:
                 for x in X:
                     c+=1
                     self.train_single(x)
@@ -134,11 +134,11 @@ class GSOM(object):
 
 
         for neighbor, w, b in zip(np.array(self.neurons.keys())[neighbors], weights, biases):
-            self.neurons[neighbor] = w #* self.lr * (x - self.neurons[neighbor])
+            self.neurons[neighbor] = w #* self.lr * (x - self.w[neighbor])
             self.biases[neighbor] = b
-            # self.neurons[neighbor] +=  self.lr* (x - self.neurons[neighbor]) #* self.lr * (x - self.neurons[neighbor])
+            # self.w[neighbor] +=  self.lr* (x - self.w[neighbor]) #* self.lr * (x - self.w[neighbor])
             # try:
-            #     if self.errors[neighbor] > self.GT and self.max_nodes > len(self.neurons):
+            #     if self.errors[neighbor] > self.GT and self.max_nodes > len(self.w):
             #         self.grow(neighbor)
             # except:
             #     continue
@@ -176,13 +176,13 @@ class GSOM(object):
         mink = np.argmax(activations)
 
 
-        # nodes = np.asarray(self.neurons.values())
+        # nodes = np.asarray(self.w.values())
         # deltas = nodes - x
         # dist_sqr = np.sum(deltas**2, axis =1 )
         # mink = np.argmin(dist_sqr)
         # mink = pairwise_distances_argmin(nodes, np.array([x]))
         # try:
-        #     dist =minkowski(self.neurons.values()[mink], x, p = 2)
+        #     dist =minkowski(self.w.values()[mink], x, p = 2)
         # except ValueError:
         #     print 'nan'
 

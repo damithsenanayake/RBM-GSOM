@@ -60,8 +60,8 @@ class GSOM(object):
     #             c += 1
     #             self.train_single(x)
     #             sys.stdout.write(
-    #                 '\r epoch %i / %i :  %i%% : nodes - %i' % (i + 1, iterations, c * 100 / t, len(self.neurons)))
-    #         self.lr *= (1 - 3.8 / len(self.neurons))
+    #                 '\r epoch %i / %i :  %i%% : nodes - %i' % (i + 1, iterations, c * 100 / t, len(self.w)))
+    #         self.lr *= (1 - 3.8 / len(self.w))
     #         if i > 1 and i%prune_thresh ==0:
     #             self.predict(X)
     #             self.prune_unused()
@@ -81,7 +81,7 @@ class GSOM(object):
             c = 0
             lamda = (i+1) / iterations
             t = X.shape[0]
-            if True:#len(self.neurons) < self.max_nodes:
+            if True:#len(self.w) < self.max_nodes:
                 for x in X:
                     c+=1
                     self.train_single(x)
@@ -127,10 +127,10 @@ class GSOM(object):
         weights += np.array([hs]).T * (x - weights) * self.lr
 
         for neighbor, w in zip(np.array(self.neurons.keys())[neighbors], weights):
-            self.neurons[neighbor] = w #* self.lr * (x - self.neurons[neighbor])
-            # self.neurons[neighbor] +=  self.lr* (x - self.neurons[neighbor]) #* self.lr * (x - self.neurons[neighbor])
+            self.neurons[neighbor] = w #* self.lr * (x - self.w[neighbor])
+            # self.w[neighbor] +=  self.lr* (x - self.w[neighbor]) #* self.lr * (x - self.w[neighbor])
             # try:
-            #     if self.errors[neighbor] > self.GT and self.max_nodes > len(self.neurons):
+            #     if self.errors[neighbor] > self.GT and self.max_nodes > len(self.w):
             #         self.grow(neighbor)
             # except:
             #     continue
@@ -216,7 +216,7 @@ class GSOM(object):
                 #                 w = new_c
                 #         else:
                 #             w = np.random.random(self.dims)
-                #             w.fill(np.array(self.neurons.values()).min() + 0.5 * (np.array(self.neurons.values()).max() - np.array(self.neurons.values()).min()))
+                #             w.fill(np.array(self.w.values()).min() + 0.5 * (np.array(self.w.values()).max() - np.array(self.w.values()).min()))
                 #     if new_a.any():
                 #         if new_c.any():
                 #             # w.fill(0.5)
@@ -261,7 +261,7 @@ class GSOM(object):
             return 2 * w1 - w2
         # elif order2.shape[0] > 0:
         #     try:
-        #         w2 = self.neurons[self.grid.keys()[np.where(np.linalg.norm(np.array(self.grid.values())[order2] - np.array(self.grid[old]), axis=1)==1)[0]]]
+        #         w2 = self.w[self.grid.keys()[np.where(np.linalg.norm(np.array(self.grid.values())[order2] - np.array(self.grid[old]), axis=1)==1)[0]]]
         #     except :
         #         w2 = np.random.random(self.dims)
         #     return 2*w1 - w2

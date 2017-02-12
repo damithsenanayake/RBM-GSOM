@@ -89,7 +89,7 @@ class GSOM(object):
             c = 0
             lamda = (i+1) / iterations
             t = X.shape[0]
-            if True:#len(self.neurons) < self.max_nodes:
+            if True:#len(self.w) < self.max_nodes:
                 for x in X:
                     c+=1
                     self.train_single(x)

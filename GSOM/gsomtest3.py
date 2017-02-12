@@ -26,7 +26,7 @@ for i in range(1):
     if i %4 ==1:
         prune = True
     gsom.train_batch(dat[i*500:(i+1)*500], lr = 1*np.exp(-i/ 10),  iterations=50, prune=False)#lr=0.01*np.exp(-i/200), iterations=100)
-    # if len(gsom.neurons) > gsom.max_nodes:
+    # if len(gsom.w) > gsom.max_nodes:
     #     gsom.cull_old()
 # gsom.prune()
 grid, hits = gsom.predict((dat[:500]))
