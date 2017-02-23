@@ -33,7 +33,7 @@ X = normalize(X, axis=1)
 # Y = SelfOrganizingSwarm(iterations=25, alpha=1, beta=0.0, delta=0.0 , theta=3.5).fit_transform(X)
 # Y = TSNE(2).fit_transform(X)
 # Y = MovingMap(iterations=50, beta=1).fit_transform(X)
-Y = GSOM().fit_transform( X, lr=1.0 , beta=0.5, sf=0.9, fd = 0.9, wd=0.09)
+Y = GSOM().fit_transform( X, lr=1.0 , beta=0.0, sf=0.75, fd = 0.1, wd=0.00)
 
 af = DBSCAN(eps=0.1).fit(Y)
 

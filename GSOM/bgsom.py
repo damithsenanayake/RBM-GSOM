@@ -34,7 +34,7 @@ class GSOM(object):
     def fit(self, X, sf , fd,  lr, beta ):
         self.dims = X.shape[1]
 
-        self.radius = 2#np.exp(1)
+        self.radius = np.exp(1)#3.0#
         self.beta = beta
         for i in range(2):
             for j in range(2):
@@ -61,7 +61,7 @@ class GSOM(object):
         radius = r_st
         alpha = lr
 
-        its =100
+        its =150
 
         for i in range(its):
             radius =r_st* np.exp(-2.0*i/its)
@@ -123,12 +123,12 @@ class GSOM(object):
     def train_single(self, x):
         bmu, err = self.find_bmu(x)
         neighbors , dists = self.get_neighbourhood(bmu)
-        self.fd = 1.0 / len(neighbors)
+        # self.fd = 1.0 / len(neighbors)
         hs = np.array([np.exp(-dists**2/(2*self.radius**2))]).T
         # hs.fill(1)
         weights = np.array(self.neurons.values())[neighbors]
 
-        weights +=  (x - weights) * self.lr*hs - self.lr * self.wd*weights
+        weights +=  (x - weights) * self.lr*hs #- self.lr * self.wd*weights
 
         for neighbor, w in zip(np.array(self.neurons.keys())[neighbors], weights):
             self.neurons[neighbor] = w
@@ -225,7 +225,7 @@ class GSOM(object):
 ########################################################################################################################
 
     def LMDS(self, X):
-        r_st = 0.5
+        r_st = 0.75
         radius = r_st
 
         grid = self.predict(X).astype(float)
