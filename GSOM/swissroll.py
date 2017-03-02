@@ -17,7 +17,7 @@ n_clusters = 10
 rand = np.random.RandomState(1)
 X, color = datasets.samples_generator.make_blobs(n_samples=3000, n_features=50, centers=n_clusters, cluster_std=3.5, random_state=20)
 
-n_fac = .75
+n_fac = .375
 
 s_f = np.sqrt(X.var(axis=0))
 noise = rand.random_sample(X.shape)
@@ -32,8 +32,8 @@ X += noise
 X=  normalize(X)
 # Y = SelfOrganizingSwarm(iterations=250, alpha=1, beta = 0.9,delta=0.001, theta=3).fit_transform(X)
 # Y = PCA(2).fit_transform(X)
-Y =TSNE().fit_transform(X)
-# Y= GSOM().fit_transform(X, lr = 1.0, beta=0.6, sf=0.85, wd=0.0125, fd=0.8)#X,lr = 1.0, beta=0.0,sf=0.01, fd=0.75, wd=0.5)
+# Y =TSNE().fit_transform(X)
+Y= GSOM().fit_transform(X, lr = 1.0, beta=0.45, sf=0.85, wd=0.02, fd=0.8)#X,lr = 1.0, beta=0.0,sf=0.01, fd=0.75, wd=0.5)
 # fig = plt.figure()
 # ax = Axes3D(fig)00
 # ax.scatter(X.T[0], X.T.[1], X.T[2],c = color, alpha=0.5, edgecolors='none')
