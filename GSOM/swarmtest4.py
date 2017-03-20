@@ -14,7 +14,7 @@ from sklearn.metrics import normalized_mutual_info_score
 
 X, labels = ds.make_moons(n_samples=2000, random_state=8)#(n_samples=1500, noise= 0.01)
 
-noise = np.random.randn(X.shape[0], 5)*0.45
+noise = np.random.randn(X.shape[0], 3)*0.45
 
 # plt.scatter(X.T[0], X.T[1], c= y, alpha=0.5)
 # plt.show()
@@ -33,7 +33,7 @@ X = normalize(X, axis=1)
 # Y = SelfOrganizingSwarm(iterations=25, alpha=1, beta=0.0, delta=0.0 , theta=3.5).fit_transform(X)
 # Y = TSNE(2).fit_transform(X)
 # Y = MovingMap(iterations=50, beta=1).fit_transform(X)
-Y = GSOM().fit_transform( X, lr=1.0 , beta=0.0, sf=0.75, fd = 0.1, wd=0.00)
+Y = GSOM().fit_transform( X, lr=1.0 , beta=0.25, sf=0.9, fd = 0.9, wd=0.03)
 
 af = DBSCAN(eps=0.1).fit(Y)
 

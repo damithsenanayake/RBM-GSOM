@@ -18,7 +18,7 @@ samples = 6000
 # x, y = SelfOrganizingSwarm(iterations=10, alpha=1, beta=0.1, delta=0, theta=3.5).fit_transform(dat[:samples]).T
 
 # x, y = MovingMap(iterations=100, beta=1.5).fit_transform(dat[:samples]).T
-Y= GSOM().fit_transform(dat[:samples], lr = 1.0, beta=0.2, sf=0.8, fd = 0.9, wd=0.0225)
+Y= GSOM().fit_transform(dat[:samples], lr = 1.0, beta=0.3, sf=0.8, fd = 0.9, wd=0.02)
 # Y = TSNE().fit_transform(dat[:samples])
 x, y = Y.T
 # x, y = MDS().fit_transform(dat[:samples]).T
