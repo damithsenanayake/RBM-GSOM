@@ -114,9 +114,9 @@ class GSOM(object):
             if self.radius <=1:
                 break#self.radius = 1.1
             # if self.Herr > self.GT:
-            i += 1
             for k in self.errors.keys():
                 self.errors[k] = 0
+            i += 1
 
 
 
@@ -140,6 +140,7 @@ class GSOM(object):
                 self.Herr = self.errors[bmu]
 
         if self.errors[bmu] > self.GT:
+        #if self.errors[bmu] > self.GT:
             self.grow(bmu)
             for k in np.array(self.neurons.keys())[neighbors]:
                 if not k == bmu:

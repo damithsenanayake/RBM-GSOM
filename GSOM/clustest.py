@@ -19,8 +19,8 @@ c = pack.target#[:1000]
 Reducer = GSOM()#MovingMap(iterations=100, beta=0.5)
 
 
-# Y =Reducer.fit_transform(D, lr=1,  beta=0.375, sf=0.99, fd = 0.25, wd=0.0275)#MDS().fit_transform(D)#
-Y =PCA(2).fit_transform(D)
+Y =Reducer.fit_transform(D, lr=1,  beta=0.375, sf=0.35, fd = 0.8, wd=0.0225)#MDS().fit_transform(D)#
+# Y =PCA(2).fit_transform(D)
 
 
 labs = KMeans(10).fit(Y).labels_

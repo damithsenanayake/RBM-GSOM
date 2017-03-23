@@ -32,8 +32,8 @@ X += noise
 X=  normalize(X)
 # Y = SelfOrganizingSwarm(iterations=250, alpha=1, beta = 0.9,delta=0.001, theta=3).fit_transform(X)
 # Y = PCA(2).fit_transform(X)
-Y =LocallyLinearEmbedding(n_components=2, n_neighbors=500).fit_transform(X)
-# Y= GSOM().fit_transform(X, lr = 1.0, beta=0.6, sf=0.85, wd=0.0125, fd=0.8)#X,lr = 1.0, beta=0.0,sf=0.01, fd=0.75, wd=0.5)
+# Y =LocallyLinearEmbedding(n_components=2, n_neighbors=500).fit_transform(X)
+Y= GSOM().fit_transform(X, lr = 1.0, beta=0.6, sf=0.45, wd=0.0125, fd=0.8)#X,lr = 1.0, beta=0.0,sf=0.01, fd=0.75, wd=0.5)
 # fig = plt.figure()
 # ax = Axes3D(fig)00
 # ax.scatter(X.T[0], X.T.[1], X.T[2],c = color, alpha=0.5, edgecolors='none')
