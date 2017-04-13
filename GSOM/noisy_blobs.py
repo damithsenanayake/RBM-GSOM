@@ -10,14 +10,14 @@ from MovingMap import MovingMap
 from sklearn.metrics import adjusted_mutual_info_score as ami
 from sklearn.metrics import adjusted_rand_score as ars
 from sklearn.preprocessing import normalize
-from bgsom import GSOM
+from cgsom import GSOM
 
 n_clusters = 10
 
 rand = np.random.RandomState(1)
 X, color = datasets.samples_generator.make_blobs(n_samples=3000, n_features=50, centers=n_clusters, cluster_std=3.5, random_state=20)
 
-n_fac = .75
+n_fac = 0.25
 
 s_f = np.sqrt(X.var(axis=0))
 noise = rand.random_sample(X.shape)

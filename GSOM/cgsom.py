@@ -58,7 +58,10 @@ class GSOM(object):
 
     def smoothen(self, X, lr = 0.5):
         r_st = 1.0
-        its =100
+        radius = r_st
+        alpha = lr
+
+        its =150
 
         for i in range(its):
             radius =r_st* np.exp(-2.0*i/its)
@@ -69,11 +72,11 @@ class GSOM(object):
 
                 bmu = np.argmin(np.linalg.norm(x - self.C, axis=1))
                 Ldist = np.linalg.norm(self.Y-self.Y[bmu], axis = 1)
-                neighborhood =np.where(Ldist < radius)[0]
-                # neighborhood =np.argsort(Ldist)[:5]
+                # neighborhood =np.where(Ldist < radius)[0]
+                neighborhood =np.argsort(Ldist)[:5]
 
                 w = np.array(self.C)[neighborhood]
-                w +=  alpha * ((x-w) * np.array([np.exp(-(15.5)*Ldist[neighborhood]**2/radius**2)]).T- self.wd*w)
+                w +=  alpha * ((x-w))
                 if np.any(np.isinf(w)) or np.any(np.isnan(w)):
                     print 'error'
                 self.C[neighborhood] = w
@@ -136,12 +139,12 @@ class GSOM(object):
         if self.errors[bmu] > self.Herr:
                 self.Herr = self.errors[bmu]
 
-        if self.errors[bmu] > self.GT:
+        if self.Herr > self.GT:
         #if self.errors[bmu] > self.GT:
             self.grow(bmu)
             for k in np.array(self.neurons.keys())[neighbors]:
                 if not k == bmu:
-                    self.errors[k]+= (self.errors[bmu]*self.fd)
+                    self.errors[k]+= (self.errors[k]*self.fd)
 
     def predict(self, X):
         hits =[]
@@ -228,44 +231,44 @@ class GSOM(object):
 
         grid = self.predict(X).astype(float)
         n = X.shape[0]*0.5
-        its = 50
+        its = 100
         it = 0
-        while it < its and radius > 0.001 and self.beta*np.exp(-7.5 * it**2  / its**2 ) > 0.001:# or n>1:
-            radius *=0.9# r_st *  np.exp(- 9.0*it  / (50))
-
-            sys.stdout.write('\r LMDS iteration %i : radius : %s : beta : %s' % (it, str(radius), str(self.beta *np.exp(-7.5 * it**2  / its**2 ))))
-              # np.exp(-10.0* iter  / self.iterations)
-            for i in range(X.shape[0]):
-                grid -= grid.min(axis=0)
-                grid /= grid.max(axis=0)
-                Ldist = np.linalg.norm(grid - grid[i], axis=1)
-                Hdist = np.linalg.norm(X[i] - X, axis=1)
-
-                neighbors = np.where(Ldist < radius)[0]
-                # neighbors = np.argsort(Ldist)[:10]
-                if len(neighbors.shape) == 0 or neighbors.shape[0] == 1:
-                    continue
-                d = Ldist[neighbors] / Ldist[neighbors].sum()
-                d[np.isnan(d)] = 0
-                D = Hdist[neighbors] / Hdist[neighbors].sum()
-                D[np.isnan(D)] = 0
-                dirs = np.array([d - D]).T
-                try:
-                    ds = d/d.max()
-                    hs = np.exp(-0.5 * ds**2)
-                    hs = np.array([hs]).T
-                except:
-                    break
-                if len(neighbors) == 0:
-                    pass
-                grid[neighbors] += self.beta  * np.exp(-7.5 * it**2  / its**2 ) * dirs * (
-                grid[i] - grid[neighbors]) * hs
-
-
-                # if np.isnan(self.grid).any() or np.isinf(self.grid).any():
-                #     print 'error '
-            it += 1
-            n*=0.8
+        # while it < its and radius > 0.001 and self.beta*np.exp(-7.5 * it**2  / its**2 ) > 0.001:# or n>1:
+        #     radius *=0.9# r_st *  np.exp(- 9.0*it  / (50))
+        #
+        #     sys.stdout.write('\r LMDS iteration %i : radius : %s : beta : %s' % (it, str(radius), str(self.beta *np.exp(-7.5 * it**2  / its**2 ))))
+        #       # np.exp(-10.0* iter  / self.iterations)
+        #     for i in range(X.shape[0]):
+        #         grid -= grid.min(axis=0)
+        #         grid /= grid.max(axis=0)
+        #         Ldist = np.linalg.norm(grid - grid[i], axis=1)
+        #         Hdist = np.linalg.norm(X[i] - X, axis=1)
+        #
+        #         neighbors = np.where(Ldist < radius)[0]
+        #         # neighbors = np.argsort(Ldist)[:10]
+        #         if len(neighbors.shape) == 0 or neighbors.shape[0] == 1:
+        #             continue
+        #         d = Ldist[neighbors] / Ldist[neighbors].sum()
+        #         d[np.isnan(d)] = 0
+        #         D = Hdist[neighbors] / Hdist[neighbors].sum()
+        #         D[np.isnan(D)] = 0
+        #         dirs = np.array([d - D]).T
+        #         try:
+        #             ds = d/d.max()
+        #             hs = np.exp(-0.5 * ds**2)
+        #             hs = np.array([hs]).T
+        #         except:
+        #             break
+        #         if len(neighbors) == 0:
+        #             pass
+        #         grid[neighbors] += self.beta  * np.exp(-7.5 * it**2  / its**2 ) * dirs * (
+        #         grid[i] - grid[neighbors]) * hs
+        #
+        #
+        #         # if np.isnan(self.grid).any() or np.isinf(self.grid).any():
+        #         #     print 'error '
+        #     it += 1
+        #     n*=0.8
         print ''
         print len(self.neurons)
         return grid

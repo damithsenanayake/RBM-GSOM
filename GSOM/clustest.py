@@ -5,6 +5,7 @@ from MovingMap import  MovingMap
 from SelfOrganizingSwarm import SelfOrganizingSwarm
 from sklearn.manifold import TSNE, MDS, Isomap, LocallyLinearEmbedding
 from bgsom import GSOM
+# from cgsom import GSOM
 from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
 from sklearn import datasets
@@ -19,8 +20,8 @@ c = pack.target#[:1000]
 Reducer = GSOM()#MovingMap(iterations=100, beta=0.5)
 
 
-Y =Reducer.fit_transform(D, lr=1,  beta=0.375, sf=0.35, fd = 0.8, wd=0.0225)#MDS().fit_transform(D)#
-# Y =PCA(2).fit_transform(D)
+Y =Reducer.fit_transform(D, lr=1,  beta=0.4, sf=0.92, fd = 1.9, wd=0.0218)#MDS().fit_transform(D)#
+# Y =TSNE(perplexity=40).fit_transform(D)
 
 
 labs = KMeans(10).fit(Y).labels_
