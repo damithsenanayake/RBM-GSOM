@@ -20,7 +20,7 @@ c = pack.target#[:1000]
 Reducer = GSOM()#MovingMap(iterations=100, beta=0.5)
 
 
-Y =Reducer.fit_transform(D, lr=1,  beta=0.4, sf=0.92, fd = 1.9, wd=0.0218)#MDS().fit_transform(D)#
+Y =Reducer.fit_transform(D, lr=1,  beta=0.4, sf=0.95, fd = 1.5, wd=0.02)#MDS().fit_transform(D)#
 # Y =TSNE(perplexity=40).fit_transform(D)
 
 

@@ -57,8 +57,8 @@ class GSOM(object):
 
 
     def smoothen(self, X, lr = 0.5):
-        r_st = 1.0
-        its =100
+        r_st =1.0
+        its =500
 
         for i in range(its):
             radius =r_st* np.exp(-2.0*i/its)
@@ -73,7 +73,7 @@ class GSOM(object):
                 # neighborhood =np.argsort(Ldist)[:5]
 
                 w = np.array(self.C)[neighborhood]
-                w +=  alpha * ((x-w) * np.array([np.exp(-(15.5)*Ldist[neighborhood]**2/radius**2)]).T- self.wd*w)
+                w +=  alpha * ((x-w) * np.array([np.exp(-(15.5)*Ldist[neighborhood]**2/radius**2)]).T- self.wd*w*(1-np.exp(-2.5*i/its)))
                 if np.any(np.isinf(w)) or np.any(np.isnan(w)):
                     print 'error'
                 self.C[neighborhood] = w
