@@ -57,7 +57,7 @@ class GSOM(object):
 
 
     def smoothen(self, X, lr = 0.5):
-        r_st =1.0
+        r_st =1.42
         its =500
 
         for i in range(its):
@@ -223,7 +223,7 @@ class GSOM(object):
 ########################################################################################################################
 
     def LMDS(self, X):
-        r_st = 0.75
+        r_st = 1.
         radius = r_st
 
         grid = self.predict(X).astype(float)
